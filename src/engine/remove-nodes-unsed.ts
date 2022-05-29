@@ -11,7 +11,7 @@ export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
 
   const run = (value: Text | DOMNodeBox) => {
     if (value) {
-      const hasChild = value === n || n.includes(value);
+      const hasChild = isArray(n) ? n.includes(value) : value === n;
       if (!hasChild) {
         if (hasTextContent(value)) {
           (value as Text).remove();
@@ -26,7 +26,6 @@ export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
   };
   if (isArray(l)) {
     n = isArray(n) ? n : [n];
-
     l.forEach(run);
   } else {
     run(l);

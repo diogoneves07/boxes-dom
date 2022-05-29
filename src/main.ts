@@ -3,10 +3,28 @@
 import Html from "./engine/Html";
 import Box from "../../../diogo07/boxes/src/main";
 
-const Button = () => Html`button`(0).set((v: any) => ++v, "click");
-const Buttons = () => [Button(), Button()];
+const Button = (i: number) => Html`button`(i).set((v: any) => ++v, "click");
+const Buttons = () => {
+  const btn1 = Button(0);
+  const div = Html`div`(btn1);
+  const $UserName = Box()("Diogo neves");
+  setTimeout(() => {
+    $UserName.change("Diogo Pereira");
+  }, 4000);
 
-Html.render(Buttons());
+  div(Html`strong`($UserName));
+
+  return div;
+};
+document.addEventListener;
+Buttons().render("#app", "after");
+setTimeout(() => {
+  Box().emit("*changeChild");
+}, 2000);
+//Menu().render();
+//button.it or button.el
+/*
+
 
 const $List = Box()(true);
 
@@ -16,7 +34,7 @@ const Menu = () => {
 
   $List.on("@set", function () {
     div.set((values: any) => {
-      values[2] = "Diogo Neves";
+      values[2] = "UserName Neves";
       return values;
     });
   });
@@ -27,10 +45,6 @@ const Menu = () => {
 setTimeout(() => {
   $List.set(() => false);
 }, 5000);
-
-Menu().render();
-//button.it or button.el
-/*
 const buttons = Html<[]>`3button`;
 buttons.forEach((button, index) => {
   if (index > 0) {

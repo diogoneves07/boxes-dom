@@ -1,3 +1,4 @@
+import { InsertNodePosition } from "./../types/dom-node-box";
 import { DOMNodeBoxProps } from "./dom-node-box-props";
 import Box from "../../../../diogo07/boxes/src/main";
 import updateDOMNodeBox from "./update-dom-node-box";
@@ -8,11 +9,23 @@ function updateBox(box: DOMNodeBox) {
     updateDOMNodeBox(box);
   });
 }
+
+function createElements<T = "one">(
+  tags: keyof HTMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap
+): T extends "one" ? DOMNodeBox : DOMNodeBox[];
+
+function createElements<T = "one">(
+  tags: TemplateStringsArray
+): T extends "one" ? DOMNodeBox : DOMNodeBox[];
+
+function createElements<T = "one">(
+  tags: string
+): T extends "one" ? DOMNodeBox : DOMNodeBox[];
 function createElements<T = "one">(
   tags:
     | TemplateStringsArray
     | string
-    | (HTMLElementTagNameMap & HTMLElementDeprecatedTagNameMap)
+    | (HTMLElementTagNameMap | HTMLElementDeprecatedTagNameMap)
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[] {
   const boxes: DOMNodeBox[] = [];
   tags
@@ -50,10 +63,12 @@ function createElements<T = "one">(
 
 createElements.render = (
   boxes: DOMNodeBox[],
-  elementOrSelector?: HTMLElement | string
+  elementOrSelector?: HTMLElement | string,
+  insertPosition?: InsertNodePosition
 ) => {
-  boxes.forEach((box) => {
-    box.render(elementOrSelector as any);
+  const b = insertPosition ? boxes.reverse() : boxes;
+  b.forEach((box) => {
+    box.render(elementOrSelector as any, insertPosition);
   });
   return createElements;
 };

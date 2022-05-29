@@ -16,10 +16,14 @@ export type DOMNodeBoxEvents =
   | "@created"
   | "@beforeMount"
   | "@mounted"
+  | "@afterMount"
+  | "@effect"
   | "@beforeUpdate"
   | "@updated"
+  | "@afterUpdate"
   | "@beforeUnmount"
-  | "@unmounted";
+  | "@unmounted"
+  | "@afterUnmount";
 
 export type DOMNodeBoxEvent = {
   readonly DOMEvent: Event | null;

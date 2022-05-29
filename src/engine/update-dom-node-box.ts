@@ -6,6 +6,7 @@ import isArray from "../utilities/is-array";
 import { DOMNodeBox } from "../types/dom-node-box";
 import beforeMountRitual from "./before-mount-ritual";
 import mountedRitual from "./mounted-ritual";
+import callAfterRendered from "./call-after-rendered";
 
 export default function updateDOMNodeBox(box: DOMNodeBox) {
   if (!box.__DOMNodeBoxData) {
@@ -14,6 +15,7 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const element = box.el;
   const newContent = box.get();
+  const isInDOM = DOMNodeBoxData.isInDOM;
 
   const content = (isArray(newContent) ? newContent : [newContent]) as any[];
 
@@ -42,8 +44,11 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
 
         return value;
       });
+
     DOMNodeBoxData.content = transformValueAfterGet(DOMNodeBoxData.content);
-    box.emit("@beforeUpdate");
+    if (isInDOM) {
+      box.emit("@beforeUpdate");
+    }
 
     const childNodes = [].slice.call(element.childNodes) as Node[];
 
@@ -81,5 +86,9 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
   } else {
     DOMNodeBoxData.content = transformValueAfterGet(content);
   }
-  box.emit("@updated");
+  if (isInDOM) {
+    box.emit("@updated");
+    callAfterRendered(box, "@afterUpdate");
+    callAfterRendered(box, "@effect");
+  }
 }
