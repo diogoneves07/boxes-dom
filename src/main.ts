@@ -5,24 +5,37 @@ import Box from "../../../diogo07/boxes/src/main";
 
 const Button = (i: number) => Html`button`(i).set((v: any) => ++v, "click");
 const Buttons = () => {
-  const btn1 = Button(0);
-  const div = Html`div`(btn1);
-  const $UserName = Box()("Diogo neves");
-  setTimeout(() => {
-    $UserName.change("Diogo Pereira");
-  }, 4000);
+  //const btn1 = Button(0);
+  const div = Html`div`("Name ", "middle ", "last");
 
-  div(Html`strong`($UserName));
+  div.on("*changeChild", () => {
+    div.setIndex(0, "Diogo ", 2, "Pereira ");
+  });
 
   return div;
 };
-document.addEventListener;
+
 Buttons().render("#app", "after");
 setTimeout(() => {
   Box().emit("*changeChild");
 }, 2000);
-//Menu().render();
-//button.it or button.el
+// divChild.on('@event1 @event3 @event4 @event5', (e)=> divParent.emit(e.type))
+/*  
+
+const $UserName = Box()("Name", "middleName", "lastName");
+setTimeout(() => {
+    $UserName.change("Diogo Neves Pereira");
+  }, 4000);
+
+Html`strong`($UserName);
+
+const strong =Html`strong`("Name", "middleName", "lastName")
+
+setTimeout(() => {
+    strong.change("Diogo Neves Pereira");
+  }, 4000);
+*/
+
 /*
 
 

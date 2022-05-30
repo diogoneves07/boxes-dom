@@ -12,6 +12,7 @@ type DOMNodeBoxConfig = {
 
 export type DOMNodeBoxEvents =
   | NormalBoxEvents
+  | keyof WindowEventMap
   | "@beforeCreate"
   | "@created"
   | "@beforeMount"

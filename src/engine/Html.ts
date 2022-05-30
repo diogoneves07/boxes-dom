@@ -9,7 +9,6 @@ function updateBox(box: DOMNodeBox) {
     updateDOMNodeBox(box);
   });
 }
-
 function createElements<T = "one">(
   tags: keyof HTMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[];
