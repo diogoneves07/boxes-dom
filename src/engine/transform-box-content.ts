@@ -2,12 +2,10 @@ import isArray from "../utilities/is-array";
 
 export function transformValueBeforeGet(content: any) {
   const run = (value: any) => {
-    if (value) {
-      if (value.nodeName === "#text") {
-        return value.isContentNumber
-          ? parseFloat(value.textContent)
-          : value.textContent;
-      }
+    if (value && value.nodeName === "#text") {
+      return value.isContentNumber
+        ? parseFloat(value.textContent)
+        : value.textContent;
     }
 
     return value;

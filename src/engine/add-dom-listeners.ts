@@ -20,14 +20,15 @@ export function addDOMListeners(box: DOMNodeBox) {
       return;
     }
     const prefix = type.substring(0, 1);
+
     switch (prefix) {
       case EVENTS_PREFIX.lib:
       case EVENTS_PREFIX.broadcast:
       case EVENTS_PREFIX.user:
-        break;
+        return;
 
       default:
-        function fn(e: Event) {
+        const emitDOMEvent = (e: Event) => {
           if (listeners[type] && listeners[type].length > 0) {
             box.emit(type, null, {
               props: {
@@ -37,20 +38,17 @@ export function addDOMListeners(box: DOMNodeBox) {
           } else {
             noObserver();
           }
-        }
-        const easyRemoveFn = () => {
-          element.removeEventListener(type, fn);
         };
-
-        DOMListenersCallbackfns[type] = easyRemoveFn;
-
         const noObserver = () => {
           DOMListenersCallbackfns[type] = null;
-
-          element.removeEventListener(type, fn);
+          element.removeEventListener(type, emitDOMEvent);
         };
 
-        element.addEventListener(type, fn);
+        DOMListenersCallbackfns[type] = () => {
+          element.removeEventListener(type, emitDOMEvent);
+        };
+
+        element.addEventListener(type, emitDOMEvent);
         break;
     }
   });

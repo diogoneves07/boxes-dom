@@ -4,9 +4,9 @@ export default function removeDOMListeners(box: DOMNodeBox) {
   if (DOMListenersCallbackfns) {
     Object.keys(DOMListenersCallbackfns).forEach((key) => {
       const callbackfn = DOMListenersCallbackfns[key];
-      if (callbackfn) {
-        callbackfn();
-      }
+
+      callbackfn && callbackfn();
+
       DOMListenersCallbackfns[key] = null;
     });
   }

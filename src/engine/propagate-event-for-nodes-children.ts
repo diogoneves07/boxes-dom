@@ -6,17 +6,20 @@ export function propagateForBoxesChildren(
 ) {
   const boxesChildren: DOMNodeBox[] = [];
   const content = nodeBox.__DOMNodeBoxData.content;
-  if (content) {
-    content.forEach((box: any) => {
-      if (box.type && box.type === "dom-node") {
-        callbackfn(box);
-        boxesChildren.push(box);
-      }
-    });
-    boxesChildren.forEach((box) => {
-      propagateForBoxesChildren(box, callbackfn);
-    });
+
+  if (!content) {
+    return;
   }
+
+  content.forEach((box: any) => {
+    if (box.type && box.type === "dom-node") {
+      callbackfn(box);
+      boxesChildren.push(box);
+    }
+  });
+  boxesChildren.forEach((box) => {
+    propagateForBoxesChildren(box, callbackfn);
+  });
 }
 
 export function propagateEventForBoxesChildren(

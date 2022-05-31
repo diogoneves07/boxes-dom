@@ -10,18 +10,23 @@ export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
   let l = transformValueBeforeGet(lastBoxContent);
 
   const run = (value: Text | DOMNodeBox) => {
-    if (value) {
-      const hasChild = isArray(n) ? n.includes(value) : value === n;
-      if (!hasChild) {
-        if (hasTextContent(value)) {
-          (value as Text).remove();
-        } else if ((value as DOMNodeBox).el) {
-          const nodeBox = value as DOMNodeBox;
-          beforeUnmountRitual(nodeBox);
-          nodeBox.el.remove();
-          unmountRitual(nodeBox);
-        }
-      }
+    if (!value) {
+      return;
+    }
+
+    const hasChild = isArray(n) ? n.includes(value) : value === n;
+
+    if (!hasChild) {
+      return;
+    }
+
+    if (hasTextContent(value)) {
+      (value as Text).remove();
+    } else if ((value as DOMNodeBox).el) {
+      const nodeBox = value as DOMNodeBox;
+      beforeUnmountRitual(nodeBox);
+      nodeBox.el.remove();
+      unmountRitual(nodeBox);
     }
   };
   if (isArray(l)) {

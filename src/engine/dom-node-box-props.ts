@@ -25,25 +25,27 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
         ? document.querySelector(elementOrSelector)
         : elementOrSelector;
 
-    if (element && parentEl) {
-      beforeMountRitual(this);
-      switch (insertPosition) {
-        case "before":
-          if (parentEl.parentElement) {
-            parentEl.parentElement.insertBefore(element, parentEl);
-          }
-          break;
-        case "after":
-          if (parentEl.parentElement) {
-            parentEl.parentElement.insertBefore(element, parentEl.nextSibling);
-          }
-          break;
-        default:
-          parentEl.appendChild(element);
-          break;
-      }
-      mountedRitual(this);
+    if (!element || !parentEl) {
+      return this;
     }
+
+    beforeMountRitual(this);
+    switch (insertPosition) {
+      case "before":
+        if (parentEl.parentElement) {
+          parentEl.parentElement.insertBefore(element, parentEl);
+        }
+        break;
+      case "after":
+        if (parentEl.parentElement) {
+          parentEl.parentElement.insertBefore(element, parentEl.nextSibling);
+        }
+        break;
+      default:
+        parentEl.appendChild(element);
+        break;
+    }
+    mountedRitual(this);
 
     return this;
   },
