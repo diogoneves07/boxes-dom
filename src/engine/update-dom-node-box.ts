@@ -12,13 +12,13 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
   if (!box.__DOMNodeBoxData) {
     return;
   }
+
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const element = box.el;
   const newContent = box.get();
   const isInDOM = DOMNodeBoxData.isInDOM;
 
   const content = (isArray(newContent) ? newContent : [newContent]) as any[];
-
   if (DOMNodeBoxData.content) {
     const previousContent = transformValueAfterGet(DOMNodeBoxData.content);
 
@@ -54,10 +54,10 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
 
     (DOMNodeBoxData.content as any[]).forEach((value, index) => {
       const newNode = value.textContent ? value : value.el;
-      const isInTheCorrectposition = childNodes[index] !== newNode;
+      const isNotCorrectPosition = childNodes[index] !== newNode;
       const nodeBox = value as DOMNodeBox;
 
-      if (newNode.parentNode && isInTheCorrectposition) {
+      if (newNode.parentNode && isNotCorrectPosition) {
         if (nodeBox.__DOMNodeBoxData.isInDOM) {
           beforeMountRitual(nodeBox);
           element.insertBefore(newNode, childNodes[index]);

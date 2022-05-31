@@ -48,5 +48,7 @@ export default function generateNodesForDOM(box: DOMNodeBox) {
   });
 
   box.emit("@created");
+
+  DOMNodeBoxData.nodesGenerated = true;
   return element;
 }

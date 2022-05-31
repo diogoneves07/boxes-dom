@@ -1,10 +1,13 @@
 import { DOMNodeBox } from "./../types/dom-node-box";
 export default function removeDOMListeners(box: DOMNodeBox) {
-  const easyRemoveDOMListeners = box.__DOMNodeBoxData.easyRemoveDOMListeners;
-  if (easyRemoveDOMListeners) {
-    easyRemoveDOMListeners.forEach((callbackfn) => {
-      callbackfn();
+  const DOMListenersCallbackfns = box.__DOMNodeBoxData.DOMListenersCallbackfns;
+  if (DOMListenersCallbackfns) {
+    Object.keys(DOMListenersCallbackfns).forEach((key) => {
+      const callbackfn = DOMListenersCallbackfns[key];
+      if (callbackfn) {
+        callbackfn();
+      }
+      DOMListenersCallbackfns[key] = null;
     });
-    easyRemoveDOMListeners.length = 0;
   }
 }

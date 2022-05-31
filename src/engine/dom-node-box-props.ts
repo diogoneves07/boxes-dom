@@ -10,10 +10,14 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
     elementOrSelector: HTMLElement | string = document.body,
     insertPosition: InsertNodePosition
   ) {
-    if (this.__DOMNodeBoxData.isInDOM) {
+    const DOMNodeBoxData = this.__DOMNodeBoxData;
+    if (DOMNodeBoxData.isInDOM) {
       this.unrender();
     }
-    generateNodesForDOM(this);
+
+    if (!DOMNodeBoxData.nodesGenerated) {
+      generateNodesForDOM(this);
+    }
 
     const element = this.el;
     const parentEl =

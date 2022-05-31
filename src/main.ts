@@ -1,27 +1,22 @@
+import { DOMNodeBox } from "./types/dom-node-box";
 // import "./style.css";
 
 import Html from "./engine/Html";
 import Box from "../../../diogo07/boxes/src/main";
-
+/*
 const Button = (i: number) => Html`button`(i).set((v: any) => ++v, "click");
-const Buttons = () => {
-  //const btn1 = Button(0);
-  const div = Html`div`("Name ", "middle ", "last");
-
-  div.on("*changeChild", () => {
-    div.setIndex(0, "Diogo ", 2, "Pereira ");
-  });
-
-  return div;
-};
+const Buttons = () => Html`div`(Button(0), Button(10));
 
 Buttons().render("#app", "after");
-setTimeout(() => {
-  Box().emit("*changeChild");
-}, 2000);
+*/
+const diogoNeves = Html.toBoxes("#diogo-neves", true) as DOMNodeBox;
+diogoNeves.on("click", () => {
+  alert("8");
+});
+diogoNeves.render();
+
 // divChild.on('@event1 @event3 @event4 @event5', (e)=> divParent.emit(e.type))
 /*  
-
 const $UserName = Box()("Name", "middleName", "lastName");
 setTimeout(() => {
     $UserName.change("Diogo Neves Pereira");
@@ -45,7 +40,7 @@ const Menu = () => {
   const lis = Html<[]>`5li`.map((li, i) => li(i));
   const div = Html`div`(lis);
 
-  $List.on("@set", function () {
+  $List.on("@seted", function () {
     div.set((values: any) => {
       values[2] = "UserName Neves";
       return values;
@@ -78,7 +73,7 @@ buttons[0].render();
 console.timeEnd("Dioog");*/
 /*
 const $Counter = Box()(0);
-$Counter.on("@set", ({content})=>{
+$Counter.on("@seted", ({content})=>{
   button(content)
 })
 const button = Html`button`(0);

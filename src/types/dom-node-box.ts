@@ -33,8 +33,9 @@ export type DOMNodeBoxEvent = {
 export type DOMNodeBoxInternalData = {
   isDOMNodeRemoved: boolean;
   isInDOM: boolean;
+  nodesGenerated: boolean;
   content?: any[];
-  easyRemoveDOMListeners?: (() => void)[];
+  DOMListenersCallbackfns?: Record<string, (() => void) | null>;
 };
 
 type DOMNodeBoxContent =
