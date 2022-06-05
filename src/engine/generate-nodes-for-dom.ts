@@ -11,8 +11,9 @@ function append(
 
   return parent.appendChild(node);
 }
+
 export default function generateNodesForDOM(box: DOMNodeBox) {
-  if (!box.__DOMNodeBoxData.content) return false;
+  if (!box || !box.__DOMNodeBoxData.content) return false;
 
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const content = DOMNodeBoxData.content as any[];
@@ -20,8 +21,7 @@ export default function generateNodesForDOM(box: DOMNodeBox) {
 
   box.emit("@beforeCreate");
   content.forEach((value: any) => {
-    if (value === box || !content) {
-      // Avoiding recursion
+    if (typeof value === "undefined" || value === null) {
       return;
     }
 
@@ -50,5 +50,6 @@ export default function generateNodesForDOM(box: DOMNodeBox) {
   box.emit("@created");
 
   DOMNodeBoxData.nodesGenerated = true;
+
   return element;
 }

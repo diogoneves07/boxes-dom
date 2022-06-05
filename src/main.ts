@@ -2,21 +2,65 @@ import { DOMNodeBox } from "./types/dom-node-box";
 // import "./style.css";
 
 import Html from "./engine/Html";
-import Box from "../../../diogo07/boxes/src/main";
-/*
-const Button = (i: number) => Html`button`(i).set((v: any) => ++v, "click");
-const Buttons = () => Html`div`(Button(0), Button(10));
+const list = Html<[]>`5li`.map((li, i) => li(i + " li"));
+const div = Html`div`(...list, 2022);
+const button = Html`button`(0);
 
-Buttons().render("#app", "after");
-*/
+div.render();
+
+div.set((values) => {
+  const a = values as any[];
+  a.unshift(button);
+  a[1] = "Hello World!!!";
+  a[2] = null;
+  values.pop();
+
+  return a;
+});
+
+/*
+const Button = (i: number, s: number) =>
+  Html`button`(i).set((v: any) => (v += s), "click");
+
+Button(0, 1).render();
+Button(0, 5).render();
+
 const diogoNeves = Html.toBoxes("#diogo-neves", true) as DOMNodeBox;
 diogoNeves.on("click", () => {
   alert("8");
 });
 diogoNeves.render();
-
+*/
 // divChild.on('@event1 @event3 @event4 @event5', (e)=> divParent.emit(e.type))
 /*  
+Pode ser util para o usuario indentificar se o elemento já esta no DOM
+isMounted
+
+All boxes
+Box.extend("http", (box, args...)=>{
+
+});
+
+Only Html boxes
+Html.extend("http", (box, args...)=>{
+
+});
+
+Ou
+
+Html.all.define("lAnime", (box, args...) => {
+eventos  automaticos: @beforeUseAxios @afterUseAxios
+});
+
+Html.delete("lAnime")
+
+Html`button`.lAnime({
+  top:"50px",
+});
+
+Html`button`.lStyle``;
+
+
 const $UserName = Box()("Name", "middleName", "lastName");
 setTimeout(() => {
     $UserName.change("Diogo Neves Pereira");

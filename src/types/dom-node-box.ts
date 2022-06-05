@@ -18,13 +18,13 @@ export type DOMNodeBoxEvents =
   | "@beforeMount"
   | "@mounted"
   | "@afterMount"
-  | "@effect"
   | "@beforeUpdate"
   | "@updated"
   | "@afterUpdate"
   | "@beforeUnmount"
   | "@unmounted"
-  | "@afterUnmount";
+  | "@afterUnmount"
+  | "@effect";
 
 export type DOMNodeBoxEvent = {
   readonly DOMEvent: Event | null;
@@ -42,7 +42,9 @@ type DOMNodeBoxContent =
   | string
   | number
   | DOMNodeBox
-  | (string | number | DOMNodeBox)[];
+  | null
+  | undefined
+  | (string | number | null | undefined | DOMNodeBox)[];
 
 export type InsertNodePosition = "before" | "after";
 export interface DOMNodeBox

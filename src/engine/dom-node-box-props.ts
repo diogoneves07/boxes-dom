@@ -18,7 +18,6 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
     if (!DOMNodeBoxData.nodesGenerated) {
       generateNodesForDOM(this);
     }
-
     const element = this.el;
     const parentEl =
       typeof elementOrSelector === "string"

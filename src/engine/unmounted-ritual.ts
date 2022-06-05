@@ -13,6 +13,5 @@ export default function unmountRitual(box: DOMNodeBox) {
   removeDOMListeners(box);
   propagateEventForBoxesChildren(box, "@unmounted");
   box.emit("@unmounted");
-  callAfterRendered(box, "@afterMount");
-  callAfterRendered(box, "@effect");
+  callAfterRendered(box, "@afterUnmount");
 }
