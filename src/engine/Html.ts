@@ -6,7 +6,7 @@ import { DOMNodeBox } from "../types/dom-node-box";
 import isArray from "../utilities/is-array";
 import removeWhitespaces from "../utilities/remove-whitespaces";
 import removeBreakLinesChars from "../utilities/remove-break-liles-chars";
-import { transformValueAfterGet } from "./transform-box-content";
+import { transformValueAfterGet } from "./transform-value-after-get";
 import { addDOMListeners } from "./add-dom-listeners";
 
 function onChanges(box: DOMNodeBox) {
@@ -80,7 +80,7 @@ Html.render = (
   elementOrSelector?: HTMLElement | string,
   insertPosition?: InsertNodePosition
 ) => {
-  const b = insertPosition ? boxes.reverse() : boxes;
+  const b = insertPosition === "after" ? boxes.slice().reverse() : boxes;
   b.forEach((box) => {
     box.render(elementOrSelector as any, insertPosition);
   });
@@ -121,8 +121,6 @@ function convertElementsToBox(parentElement: HTMLElement) {
         ) {
           value = currentElement.textContent;
         }
-        break;
-      default:
         break;
     }
     if (value) {

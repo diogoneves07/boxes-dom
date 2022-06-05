@@ -1,15 +1,14 @@
 import hasTextContent from "../utilities/has-text-content";
-import isArray from "../utilities/is-array";
 import { DOMNodeBox } from "../types/dom-node-box";
 import beforeUnmountRitual from "./before-unmount-ritual";
 import unmountRitual from "./unmounted-ritual";
 
-export function removeNodesUnsed(newBoxContent: any, lastBoxContent: any) {
+export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
   let n = newBoxContent;
   let l = lastBoxContent;
 
-  const run = (value: Text | DOMNodeBox) => {
-    const hasChild = isArray(n) ? n.includes(value) : value === n;
+  l.forEach((value: Text | DOMNodeBox) => {
+    const hasChild = n.includes(value);
 
     if (hasChild) {
       return;
@@ -24,11 +23,5 @@ export function removeNodesUnsed(newBoxContent: any, lastBoxContent: any) {
       nodeBox.el.remove();
       unmountRitual(nodeBox);
     }
-  };
-  if (isArray(l)) {
-    n = isArray(n) ? n : [n];
-    l.forEach(run);
-  } else {
-    run(l);
-  }
+  });
 }

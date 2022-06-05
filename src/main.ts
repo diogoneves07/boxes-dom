@@ -2,22 +2,14 @@ import { DOMNodeBox } from "./types/dom-node-box";
 // import "./style.css";
 
 import Html from "./engine/Html";
-const list = Html<[]>`5li`.map((li, i) => li(i + " li"));
-const div = Html`div`(...list, 2022);
-const button = Html`button`(0);
+const normalDivElement = document.createElement("div");
+const normalButtonElement = document.createElement("button");
+const buttons = [Html`button`(0), Html`button`(1)];
 
-div.render();
+document.body.appendChild(normalDivElement);
+document.body.appendChild(normalButtonElement);
 
-div.set((values) => {
-  const a = values as any[];
-  a.unshift(button);
-  a[1] = "Hello World!!!";
-  a[2] = null;
-  values.pop();
-
-  return a;
-});
-
+Html.render(buttons, normalDivElement, "after");
 /*
 const Button = (i: number, s: number) =>
   Html`button`(i).set((v: any) => (v += s), "click");

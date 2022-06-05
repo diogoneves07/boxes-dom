@@ -12,11 +12,25 @@ describe("Render box element in DOM", () => {
     expect(box.el.isConnected).toBe(true);
   });
   test("Render when node-box is already in the DOM", () => {
+    const normalDivElement = document.createElement("div");
+    document.body.appendChild(normalDivElement);
     const box = Html`button`(0);
+
     box.render();
-    box.render();
+
+    expect(box.el.parentElement).toBe(document.body);
+
+    box.render(normalDivElement);
+
+    expect(box.el.parentElement).toBe(normalDivElement);
     expect(box.el.isConnected).toBe(true);
     expect(box.el.textContent).toBe("0");
+  });
+  test("Render without a box parent", () => {
+    const buttons = [Html`button`(0), Html`button`(1)];
+    Html.render(buttons);
+    expect(buttons[0].el.isConnected).toBe(true);
+    expect(buttons[1].el.isConnected).toBe(true);
   });
   test("Render on non-existent element", () => {
     const box = Html`button`(0);
@@ -45,7 +59,7 @@ describe("Render box element in DOM", () => {
   });
 
   test("Render null and undefined values", () => {
-    const p = Html`p`(null, undefined);
+    const p = Html`p`(null, undefined, Html`span`(null, undefined));
     p.render();
   });
 

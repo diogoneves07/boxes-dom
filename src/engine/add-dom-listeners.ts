@@ -2,12 +2,8 @@ import { EVENTS_PREFIX } from "../../../boxes/src/globals";
 import { DOMNodeBox } from "../types/dom-node-box";
 
 export function addDOMListeners(box: DOMNodeBox) {
-  if (!box.listeners) {
-    return;
-  }
-
   const element = box.el;
-  const listeners = box.listeners;
+  const listeners = box.listeners as Exclude<typeof box.listeners, undefined>;
 
   if (!box.__DOMNodeBoxData.DOMListenersCallbackfns) {
     box.__DOMNodeBoxData.DOMListenersCallbackfns = {};

@@ -1,4 +1,4 @@
-import { transformValueAfterGet } from "./transform-box-content";
+import { transformValueAfterGet } from "./transform-value-after-get";
 import hasTextContent from "../utilities/has-text-content";
 import generateNodesForDOM from "./generate-nodes-for-dom";
 import { removeNodesUnsed } from "./remove-nodes-unsed";
@@ -7,6 +7,7 @@ import { DOMNodeBox } from "../types/dom-node-box";
 import beforeMountRitual from "./before-mount-ritual";
 import mountedRitual from "./mounted-ritual";
 import callAfterRendered from "./call-after-rendered";
+import concatArrays from "../utilities/concat-arrays";
 
 function emitUpdatedEvents(box: DOMNodeBox) {
   if (box.__DOMNodeBoxData.isInDOM) {
@@ -17,14 +18,13 @@ function emitUpdatedEvents(box: DOMNodeBox) {
 }
 
 export default function updateDOMNodeBox(box: DOMNodeBox) {
-  if (!box.__DOMNodeBoxData) {
-    return;
-  }
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const newContent = box.get();
 
   if (!DOMNodeBoxData.content) {
-    DOMNodeBoxData.content = transformValueAfterGet(newContent);
+    DOMNodeBoxData.content = transformValueAfterGet(
+      isArray(newContent) ? concatArrays(newContent) : newContent
+    );
     emitUpdatedEvents(box);
 
     return;
@@ -32,7 +32,10 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
 
   const element = box.el;
   const isInDOM = DOMNodeBoxData.isInDOM;
-  const content = (isArray(newContent) ? newContent : [newContent]) as any[];
+  const content = concatArrays(
+    (isArray(newContent) ? newContent : [newContent]) as any[]
+  );
+
   const previousContent = transformValueAfterGet(DOMNodeBoxData.content);
 
   DOMNodeBoxData.content = content
@@ -60,6 +63,7 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
     });
 
   DOMNodeBoxData.content = transformValueAfterGet(DOMNodeBoxData.content);
+
   if (isInDOM) {
     box.emit("@beforeUpdate");
   }
@@ -71,16 +75,17 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
     const isNotCorrectPosition = childNodes[index] !== newNode;
     const nodeBox = value as DOMNodeBox;
     const isNodeBox = nodeBox.type === "dom-node";
+
     if (
       newNode.parentNode &&
       isNotCorrectPosition &&
-      ((newNode as HTMLElement).isConnected || nodeBox.__DOMNodeBoxData.isInDOM)
+      (newNode as HTMLElement).isConnected
     ) {
-      isInDOM && isNodeBox && beforeMountRitual(nodeBox);
-      element.insertBefore(newNode, childNodes[index]);
+      isNodeBox && beforeMountRitual(nodeBox);
+      element.insertBefore(newNode, element.childNodes[index]);
       childNodes.splice(index, 1);
 
-      isInDOM && isNodeBox && mountedRitual(nodeBox);
+      isNodeBox && mountedRitual(nodeBox);
 
       return;
     }
@@ -90,14 +95,8 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
       !(newNode as Node).isConnected
     ) {
       isNodeBox && isInDOM && beforeMountRitual(nodeBox);
-      if (index === 0) {
-        element.insertBefore(
-          newNode,
-          element.firstChild ? element.firstChild : null
-        );
-      } else {
-        element.insertBefore(newNode, element.childNodes[index] || null);
-      }
+
+      element.insertBefore(newNode, element.childNodes[index] || null);
 
       isNodeBox && isInDOM && mountedRitual(nodeBox);
     }
