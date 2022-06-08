@@ -1,15 +1,54 @@
-import { DOMNodeBox } from "./types/dom-node-box";
-// import "./style.css";
-
+import Box from "../../boxes/src/main";
 import Html from "./engine/Html";
-const normalDivElement = document.createElement("div");
-const normalButtonElement = document.createElement("button");
-const buttons = [Html`button`(0), Html`button`(1)];
 
-document.body.appendChild(normalDivElement);
-document.body.appendChild(normalButtonElement);
+const Component = () => {
+  // State vars first
+  const $value = Box()("Hello ");
+  const $value1 = Box()("2022 ");
 
-Html.render(buttons, normalDivElement, "after");
+  // DOM elements second and after another things...
+  const span = Html`span`($value);
+  const button = Html`button`(span);
+
+  // $InputValue.on("@changed", () => (input.el.value = $InputValue.get()));
+
+  $value.on("*data", () => {
+    span("World! ", $value1);
+
+    setTimeout(() => {
+      span.change(2023);
+    }, 500);
+  });
+
+  return button;
+};
+
+Component().render();
+
+let count = 0;
+setTimeout(() => {
+  Box().emit("*data", { value: (count += 5) });
+}, 1000);
+/*
+console.time("Dioog");
+const buttons = Html<[]>`div 2000li`;
+buttons.forEach((button, index) => {
+  if (index > 0) {
+    buttons[0](button(0, " --- 2022"));
+    setInterval(() => {
+      button.set((values) => {
+        if (Array.isArray(values)) {
+          values[0] += 1;
+
+          return values;
+        }
+        return values + 1;
+      });
+    }, index * 3);
+  }
+});
+buttons[0].render();
+console.timeEnd("Dioog");*/
 /*
 const Button = (i: number, s: number) =>
   Html`button`(i).set((v: any) => (v += s), "click");
@@ -25,16 +64,8 @@ diogoNeves.render();
 */
 // divChild.on('@event1 @event3 @event4 @event5', (e)=> divParent.emit(e.type))
 /*  
-Pode ser util para o usuario indentificar se o elemento já esta no DOM
-isMounted
-
 All boxes
-Box.extend("http", (box, args...)=>{
-
-});
-
-Only Html boxes
-Html.extend("http", (box, args...)=>{
+Box.define("lHttp", (box, args...)=>{
 
 });
 
@@ -51,69 +82,4 @@ Html`button`.lAnime({
 });
 
 Html`button`.lStyle``;
-
-
-const $UserName = Box()("Name", "middleName", "lastName");
-setTimeout(() => {
-    $UserName.change("Diogo Neves Pereira");
-  }, 4000);
-
-Html`strong`($UserName);
-
-const strong =Html`strong`("Name", "middleName", "lastName")
-
-setTimeout(() => {
-    strong.change("Diogo Neves Pereira");
-  }, 4000);
 */
-
-/*
-
-
-const $List = Box()(true);
-
-const Menu = () => {
-  const lis = Html<[]>`5li`.map((li, i) => li(i));
-  const div = Html`div`(lis);
-
-  $List.on("@seted", function () {
-    div.set((values: any) => {
-      values[2] = "UserName Neves";
-      return values;
-    });
-  });
-
-  return div;
-};
-
-setTimeout(() => {
-  $List.set(() => false);
-}, 5000);
-const buttons = Html<[]>`3button`;
-buttons.forEach((button, index) => {
-  if (index > 0) {
-    buttons[index - 1](button(index));
-    setInterval(() => {
-      button.set((values) => {
-        if (Array.isArray(values)) {
-          values[0] += 1;
-
-          return values;
-        }
-        return values + 1;
-      });
-    }, 1000);
-  }
-});
-buttons[0].render();
-console.timeEnd("Dioog");*/
-/*
-const $Counter = Box()(0);
-$Counter.on("@seted", ({content})=>{
-  button(content)
-})
-const button = Html`button`(0);
-setInterval(() => {
-  button.set((values) => values + 1);
-}, 1000);
-button.render();*/

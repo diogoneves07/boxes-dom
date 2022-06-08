@@ -1,11 +1,11 @@
 import { DOMNodeBox } from "../types/dom-node-box";
 
 export default function generateNodesForDOM(box: DOMNodeBox) {
+  box.emit("@beforeCreate");
+
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const content = DOMNodeBoxData.content as any[];
   let element = box.el;
-
-  box.emit("@beforeCreate");
 
   content.forEach((value: any) => {
     if (value === undefined || value === null) {
@@ -17,16 +17,14 @@ export default function generateNodesForDOM(box: DOMNodeBox) {
     if (nodeName && nodeName === "#text") {
       element.appendChild(value);
     } else {
-      const v = generateNodesForDOM(value);
-      if (v) {
-        element.appendChild(v);
+      const nodesForDOM = generateNodesForDOM(value);
+      if (nodesForDOM) {
+        element.appendChild(nodesForDOM);
       }
     }
   });
 
-  box.emit("@created");
-
   DOMNodeBoxData.nodesGenerated = true;
-
+  box.emit("@created");
   return element;
 }

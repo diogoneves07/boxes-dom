@@ -10,6 +10,8 @@ type DOMNodeBoxConfig = {
   eventsList: DOMNodeBoxEvents;
 };
 
+export type Box = NormalBox;
+
 export type DOMNodeBoxEvents =
   | NormalBoxEvents
   | keyof WindowEventMap
@@ -44,6 +46,7 @@ type DOMNodeBoxContent =
   | DOMNodeBox
   | null
   | undefined
+  | NormalBox
   | (string | number | null | undefined | DOMNodeBox)[];
 
 export type InsertNodePosition = "before" | "after";

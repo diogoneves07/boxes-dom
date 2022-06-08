@@ -8,6 +8,9 @@ export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
   let l = lastBoxContent;
 
   l.forEach((value: Text | DOMNodeBox) => {
+    if (!value) {
+      return;
+    }
     const hasChild = n.includes(value);
 
     if (hasChild) {

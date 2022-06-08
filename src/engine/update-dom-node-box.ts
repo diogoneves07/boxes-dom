@@ -8,6 +8,7 @@ import beforeMountRitual from "./before-mount-ritual";
 import mountedRitual from "./mounted-ritual";
 import callAfterRendered from "./call-after-rendered";
 import concatArrays from "../utilities/concat-arrays";
+import { useDataFromBox } from "./use-data-from-box";
 
 function emitUpdatedEvents(box: DOMNodeBox) {
   if (box.__DOMNodeBoxData.isInDOM) {
@@ -16,33 +17,28 @@ function emitUpdatedEvents(box: DOMNodeBox) {
     callAfterRendered(box, "@effect");
   }
 }
-
 export default function updateDOMNodeBox(box: DOMNodeBox) {
   const DOMNodeBoxData = box.__DOMNodeBoxData;
-  const newContent = box.get();
+  const newContent = useDataFromBox(box.get(), box);
+  const isInDOM = DOMNodeBoxData.isInDOM;
 
-  if (!DOMNodeBoxData.content) {
-    DOMNodeBoxData.content = transformValueAfterGet(
-      isArray(newContent) ? concatArrays(newContent) : newContent
-    );
-    emitUpdatedEvents(box);
-
+  if (!isInDOM) {
     return;
   }
 
   const element = box.el;
-  const isInDOM = DOMNodeBoxData.isInDOM;
+
   const content = concatArrays(
     (isArray(newContent) ? newContent : [newContent]) as any[]
   );
 
   const previousContent = transformValueAfterGet(DOMNodeBoxData.content);
-
   DOMNodeBoxData.content = content
     .filter((value: any) => value !== null)
     .map((value: any, index: number) => {
       if (
         previousContent[index] !== undefined &&
+        previousContent[index] !== null &&
         hasTextContent(previousContent[index]) &&
         (typeof value === "string" || typeof value === "number")
       ) {
@@ -101,6 +97,7 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
       isNodeBox && isInDOM && mountedRitual(nodeBox);
     }
   });
+
   removeNodesUnsed(DOMNodeBoxData.content as any[], previousContent);
 
   emitUpdatedEvents(box);

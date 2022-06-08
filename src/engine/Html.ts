@@ -8,12 +8,32 @@ import removeWhitespaces from "../utilities/remove-whitespaces";
 import removeBreakLinesChars from "../utilities/remove-break-liles-chars";
 import { transformValueAfterGet } from "./transform-value-after-get";
 import { addDOMListeners } from "./add-dom-listeners";
+import concatArrays from "../utilities/concat-arrays";
+import { useDataFromBox } from "./use-data-from-box";
 
 function onChanges(box: DOMNodeBox) {
   box.on("@changed", () => {
-    updateDOMNodeBox(box);
+    const DOMNodeBoxData = box.__DOMNodeBoxData;
+    if (DOMNodeBoxData.content) {
+      updateDOMNodeBox(box);
+    }
   });
 
+  box.on("@beforeCreate", () => {
+    const DOMNodeBoxData = box.__DOMNodeBoxData;
+
+    if (!DOMNodeBoxData.content) {
+      const newContent = box.get();
+      DOMNodeBoxData.content = transformValueAfterGet(
+        useDataFromBox(
+          isArray(newContent) ? concatArrays(newContent) : newContent,
+          box
+        )
+      );
+
+      return;
+    }
+  });
   box.on("@eventAdded @eventRemoved", () => {
     addDOMListeners(box);
   });
@@ -45,13 +65,20 @@ function Html<T = "one">(
     | (HTMLElementTagNameMap | HTMLElementDeprecatedTagNameMap)
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[] {
   const boxes: DOMNodeBox[] = [];
+
   tags
     .toString()
     .split(" ")
-    .forEach((tagName) => {
+    .forEach((tag) => {
+      const tagName = tag as string;
       const tagsAmount = parseFloat(tagName);
+
+      const t = tagsAmount
+        ? tagName.substring(tagsAmount.toString().length)
+        : tagName;
       const length = tagsAmount || 1;
       let count = 0;
+
       while (count < length) {
         const box = Box() as unknown as DOMNodeBox;
 
@@ -61,9 +88,6 @@ function Html<T = "one">(
 
         onChanges(box);
 
-        const t = tagsAmount
-          ? tagName.substring(tagsAmount.toString().length)
-          : tagName;
         box.el = document.createElement(t);
 
         boxes.push(box);

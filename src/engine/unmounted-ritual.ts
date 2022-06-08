@@ -3,7 +3,7 @@ import callAfterRendered from "./call-after-rendered";
 import {
   propagateEventForBoxesChildren,
   propagateForBoxesChildren,
-} from "./propagate-event-for-nodes-children";
+} from "./propagate-event";
 import removeDOMListeners from "./remove-dom-listeners";
 export default function unmountRitual(box: DOMNodeBox) {
   box.__DOMNodeBoxData.isInDOM = false;

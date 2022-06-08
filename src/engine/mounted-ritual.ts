@@ -3,7 +3,7 @@ import callAfterRendered from "./call-after-rendered";
 import {
   propagateEventForBoxesChildren,
   propagateForBoxesChildren,
-} from "./propagate-event-for-nodes-children";
+} from "./propagate-event";
 export default function mountedRitual(box: DOMNodeBox) {
   box.__DOMNodeBoxData.isInDOM = true;
   propagateForBoxesChildren(box, (box) => {

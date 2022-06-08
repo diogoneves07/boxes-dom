@@ -1,5 +1,5 @@
 import { DOMNodeBox, DOMNodeBoxEvents } from "./../types/dom-node-box";
-import { propagateEventForBoxesChildren } from "./propagate-event-for-nodes-children";
+import { propagateEventForBoxesChildren } from "./propagate-event";
 type Events = Extract<
   DOMNodeBoxEvents,
   "@afterMount" | "@afterUpdate" | "@effect" | "@afterUnmount"
