@@ -22,10 +22,6 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
   const newContent = useDataFromBox(box.get(), box);
   const isInDOM = DOMNodeBoxData.isInDOM;
 
-  if (!isInDOM) {
-    return;
-  }
-
   const element = box.el;
 
   const content = concatArrays(
@@ -67,7 +63,7 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
   const childNodes = [].slice.call(element.childNodes) as Node[];
 
   (DOMNodeBoxData.content as any[]).forEach((value, index) => {
-    const newNode = value.textContent ? value : value.el;
+    const newNode = hasTextContent(value) ? value : value.el;
     const isNotCorrectPosition = childNodes[index] !== newNode;
     const nodeBox = value as DOMNodeBox;
     const isNodeBox = nodeBox.type === "dom-node";

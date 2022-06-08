@@ -1,7 +1,7 @@
 import { Box, DOMNodeBox } from "../types/dom-node-box";
 
 function isAnotherTypeOfBox(value: any) {
-  return (value as Box).isBox && (value as any).type !== "dom-node";
+  return value && (value as Box).isBox && (value as any).type !== "dom-node";
 }
 function forwardEventToParentBox(box: Box, parentBox: DOMNodeBox): any {
   const content = box.get();
@@ -27,6 +27,9 @@ function forwardEventToParentBox(box: Box, parentBox: DOMNodeBox): any {
     box.off("@changed", fn);
   });
 
+  // Recursion needed to get all possible boxes at various levels.
+  // useDataFromBox -> forwardEventToParentBox -> useDataFromBox
+  // The recursion stops as soon as it doesn't find any more state boxes.
   return useDataFromBox(content, parentBox);
 }
 export function useDataFromBox(arrayOrBox: any, parentBox: DOMNodeBox) {

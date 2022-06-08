@@ -4,6 +4,9 @@ test("Manipulate DOM nodes", () => {
   const list = Html<[]>`5li`.map((li, i) => li(i + "li"));
   const div = Html`div`(...list, [2022], "07");
   const button = Html`button`(0);
+  const p = Html`p`(null, undefined, Html`span`(null, undefined));
+
+  p.render();
 
   div.render();
 
@@ -19,9 +22,11 @@ test("Manipulate DOM nodes", () => {
     a.pop();
     return a;
   });
+  p.change("");
   const childNodes = div.el.childNodes;
   expect(list[1].el.isConnected).toBe(false);
   expect(childNodes[0]).toBe(button.el);
   expect(childNodes[1].textContent).toBe("Hello World!!!");
   expect(childNodes[2] as HTMLElement).toBe(list[3].el);
+  expect(p.el.innerHTML).toBe("");
 });

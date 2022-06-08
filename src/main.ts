@@ -1,6 +1,13 @@
 import Box from "../../boxes/src/main";
 import Html from "./engine/Html";
 
+const $message = Box()("Hello ");
+
+const span = Html`span`($message).render();
+
+span.change("");
+$message.change(2022);
+
 const Component = () => {
   // State vars first
   const $value = Box()("Hello ");
