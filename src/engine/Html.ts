@@ -9,29 +9,39 @@ import removeBreakLinesChars from "../utilities/remove-break-liles-chars";
 import { transformValueAfterGet } from "./transform-value-after-get";
 import { addDOMListeners } from "./add-dom-listeners";
 import concatArrays from "../utilities/concat-arrays";
-import { useDataFromBox } from "./use-data-from-box";
+import normalizeBoxesValues from "./normalize-boxes-values";
+import insertNodeInDOM from "./insert-node-in-dom";
 
 function onChanges(box: DOMNodeBox) {
+  const DOMNodeBoxData = box.__DOMNodeBoxData;
+
+  box.on("@normalize", () => {
+    box.normalize((values) => normalizeBoxesValues(values as any[]));
+  });
+
+  box.on("@deepChanges", (e) => {
+    if (e.hasChanged("dom-node")) {
+      const dataIntoBoxes = box.useDataIntoBoxes("dom-node");
+      if (DOMNodeBoxData.content) {
+        updateDOMNodeBox(box, transformValueAfterGet(dataIntoBoxes));
+      }
+    }
+  });
   box.on("@changed", () => {
-    const DOMNodeBoxData = box.__DOMNodeBoxData;
+    const dataIntoBoxes = box.useDataIntoBoxes("dom-node");
     if (DOMNodeBoxData.content) {
-      updateDOMNodeBox(box);
+      updateDOMNodeBox(box, transformValueAfterGet(dataIntoBoxes));
     }
   });
 
   box.on("@beforeCreate", () => {
-    const DOMNodeBoxData = box.__DOMNodeBoxData;
-
     if (!DOMNodeBoxData.content) {
-      const newContent = box.get();
-      DOMNodeBoxData.content = transformValueAfterGet(
-        useDataFromBox(
-          isArray(newContent) ? concatArrays(newContent) : newContent,
-          box
-        )
-      );
+      const dataIntoBoxes = box.useDataIntoBoxes("dom-node");
+      const content = isArray(dataIntoBoxes)
+        ? concatArrays(dataIntoBoxes)
+        : dataIntoBoxes;
 
-      return;
+      updateDOMNodeBox(box, transformValueAfterGet(content));
     }
   });
   box.on("@eventAdded @eventRemoved", () => {
@@ -51,7 +61,8 @@ function Html<T = "one">(
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[];
 
 function Html<T = "one">(
-  tags: TemplateStringsArray
+  tags: TemplateStringsArray,
+  ...args: string[]
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[];
 
 function Html<T = "one">(
@@ -62,52 +73,75 @@ function Html<T = "one">(
   tags:
     | TemplateStringsArray
     | string
-    | (HTMLElementTagNameMap | HTMLElementDeprecatedTagNameMap)
+    | (HTMLElementTagNameMap | HTMLElementDeprecatedTagNameMap),
+  ...args: string[]
 ): T extends "one" ? DOMNodeBox : DOMNodeBox[] {
+  let allTags: string = "";
+  if ((tags as TemplateStringsArray).raw) {
+    (tags as TemplateStringsArray).forEach((value, index) => {
+      allTags = allTags + value + (args[index] || "");
+    });
+  } else {
+    allTags = tags as string;
+  }
   const boxes: DOMNodeBox[] = [];
 
-  tags
-    .toString()
-    .split(" ")
-    .forEach((tag) => {
-      const tagName = tag as string;
-      const tagsAmount = parseFloat(tagName);
+  allTags.split(" ").forEach((tag) => {
+    const tagName = tag as string;
+    const tagsAmount = parseFloat(tagName);
 
-      const t = tagsAmount
-        ? tagName.substring(tagsAmount.toString().length)
-        : tagName;
-      const length = tagsAmount || 1;
-      let count = 0;
+    const t = tagsAmount
+      ? tagName.substring(tagsAmount.toString().length)
+      : tagName;
+    const length = tagsAmount || 1;
+    let count = 0;
 
-      while (count < length) {
-        const box = Box() as unknown as DOMNodeBox;
+    while (count < length) {
+      const box = Box() as unknown as DOMNodeBox;
 
-        Object.assign(box, DOMNodeBoxProps);
-        box.type = "dom-node";
-        box.__DOMNodeBoxData = initDOMNodeBoxData();
+      Object.assign(box, DOMNodeBoxProps);
 
-        onChanges(box);
+      box.__DOMNodeBoxData = initDOMNodeBoxData();
 
-        box.el = document.createElement(t);
+      onChanges(box);
 
-        boxes.push(box);
+      box.el = document.createElement(t);
 
-        count++;
-      }
-    });
+      boxes.push(box);
+
+      count++;
+    }
+  });
 
   return (boxes[1] ? boxes : boxes[0]) as any;
 }
-
 Html.render = (
-  boxes: DOMNodeBox[],
+  boxes: (DOMNodeBox | Function)[] | (DOMNodeBox | Function)[][],
   elementOrSelector?: HTMLElement | string,
   insertPosition?: InsertNodePosition
 ) => {
-  const b = insertPosition === "after" ? boxes.slice().reverse() : boxes;
-  b.forEach((box) => {
-    box.render(elementOrSelector as any, insertPosition);
-  });
+  let onlyBoxes = normalizeBoxesValues(boxes) as (DOMNodeBox | string)[];
+
+  (insertPosition === "after" ? onlyBoxes.reverse() : onlyBoxes).forEach(
+    (item) => {
+      if (typeof item === "string") {
+        const parentEl =
+          (typeof elementOrSelector === "string"
+            ? document.querySelector(elementOrSelector)
+            : elementOrSelector) || document.body;
+
+        window.requestAnimationFrame(() => {
+          insertNodeInDOM(
+            parentEl as Element,
+            document.createTextNode(item),
+            insertPosition
+          );
+        });
+      } else {
+        item.render(elementOrSelector as any, insertPosition);
+      }
+    }
+  );
   return Html;
 };
 

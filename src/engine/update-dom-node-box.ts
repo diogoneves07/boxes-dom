@@ -8,7 +8,6 @@ import beforeMountRitual from "./before-mount-ritual";
 import mountedRitual from "./mounted-ritual";
 import callAfterRendered from "./call-after-rendered";
 import concatArrays from "../utilities/concat-arrays";
-import { useDataFromBox } from "./use-data-from-box";
 
 function emitUpdatedEvents(box: DOMNodeBox) {
   if (box.__DOMNodeBoxData.isInDOM) {
@@ -17,9 +16,10 @@ function emitUpdatedEvents(box: DOMNodeBox) {
     callAfterRendered(box, "@effect");
   }
 }
-export default function updateDOMNodeBox(box: DOMNodeBox) {
+let requestAnimationFrameId = -1;
+
+export default function updateDOMNodeBox(box: DOMNodeBox, newContent: any) {
   const DOMNodeBoxData = box.__DOMNodeBoxData;
-  const newContent = useDataFromBox(box.get(), box);
   const isInDOM = DOMNodeBoxData.isInDOM;
 
   const element = box.el;
@@ -33,13 +33,17 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
     .filter((value: any) => value !== null)
     .map((value: any, index: number) => {
       if (
+        hasTextContent(value) &&
         previousContent[index] !== undefined &&
         previousContent[index] !== null &&
-        hasTextContent(previousContent[index]) &&
-        (typeof value === "string" || typeof value === "number")
+        hasTextContent(previousContent[index])
       ) {
-        if (previousContent[index].textContent !== value) {
-          previousContent[index].textContent = value;
+        const lastTextContent = previousContent[index].textContent;
+        if (
+          lastTextContent !== value &&
+          lastTextContent !== value.textContent
+        ) {
+          previousContent[index].textContent = value.textContent;
         }
         return previousContent[index];
       }
@@ -56,45 +60,48 @@ export default function updateDOMNodeBox(box: DOMNodeBox) {
 
   DOMNodeBoxData.content = transformValueAfterGet(DOMNodeBoxData.content);
 
-  if (isInDOM) {
-    box.emit("@beforeUpdate");
-  }
+  window.cancelAnimationFrame(requestAnimationFrameId);
 
-  const childNodes = [].slice.call(element.childNodes) as Node[];
-
-  (DOMNodeBoxData.content as any[]).forEach((value, index) => {
-    const newNode = hasTextContent(value) ? value : value.el;
-    const isNotCorrectPosition = childNodes[index] !== newNode;
-    const nodeBox = value as DOMNodeBox;
-    const isNodeBox = nodeBox.type === "dom-node";
-
-    if (
-      newNode.parentNode &&
-      isNotCorrectPosition &&
-      (newNode as HTMLElement).isConnected
-    ) {
-      isNodeBox && beforeMountRitual(nodeBox);
-      element.insertBefore(newNode, element.childNodes[index]);
-      childNodes.splice(index, 1);
-
-      isNodeBox && mountedRitual(nodeBox);
-
-      return;
+  requestAnimationFrameId = window.requestAnimationFrame(() => {
+    if (isInDOM) {
+      box.emit("@beforeUpdate");
     }
 
-    if (
-      (nodeBox.type === "dom-node" && !nodeBox.__DOMNodeBoxData.isInDOM) ||
-      !(newNode as Node).isConnected
-    ) {
-      isNodeBox && isInDOM && beforeMountRitual(nodeBox);
+    const childNodes = [].slice.call(element.childNodes) as Node[];
 
-      element.insertBefore(newNode, element.childNodes[index] || null);
+    (DOMNodeBoxData.content as any[]).forEach((value, index) => {
+      const newNode = hasTextContent(value) ? value : value.el;
+      const isNotCorrectPosition = childNodes[index] !== newNode;
+      const nodeBox = value as DOMNodeBox;
+      const isNodeBox = nodeBox.type === "dom-node";
 
-      isNodeBox && isInDOM && mountedRitual(nodeBox);
-    }
+      if (
+        newNode.parentNode &&
+        isNotCorrectPosition &&
+        (newNode as HTMLElement).isConnected
+      ) {
+        isNodeBox && beforeMountRitual(nodeBox);
+        element.insertBefore(newNode, element.childNodes[index]);
+        childNodes.splice(index, 1);
+
+        isNodeBox && mountedRitual(nodeBox);
+
+        return;
+      }
+
+      if (
+        (nodeBox.type === "dom-node" && !nodeBox.__DOMNodeBoxData.isInDOM) ||
+        !(newNode as Node).isConnected
+      ) {
+        isNodeBox && isInDOM && beforeMountRitual(nodeBox);
+        element.insertBefore(newNode, element.childNodes[index] || null);
+
+        isNodeBox && isInDOM && mountedRitual(nodeBox);
+      }
+    });
+
+    removeNodesUnsed(DOMNodeBoxData.content as any[], previousContent);
+
+    emitUpdatedEvents(box);
   });
-
-  removeNodesUnsed(DOMNodeBoxData.content as any[], previousContent);
-
-  emitUpdatedEvents(box);
 }

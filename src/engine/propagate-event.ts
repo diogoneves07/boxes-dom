@@ -1,11 +1,14 @@
 import { DOMNodeBox, DOMNodeBoxEvents } from "../types/dom-node-box";
+import isArray from "../utilities/is-array";
 
 export function propagateForBoxesChildren(
   parentNodeBox: DOMNodeBox,
   callbackfn: (box: DOMNodeBox) => void
 ) {
   const boxesChildren: DOMNodeBox[] = [];
-  const content = parentNodeBox.__DOMNodeBoxData.content as any[];
+  const values = parentNodeBox.get();
+
+  const content = isArray(values) ? values : [values];
 
   content.forEach((box: any) => {
     if (box && box.type && box.type === "dom-node") {

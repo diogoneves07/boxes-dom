@@ -10,8 +10,6 @@ type DOMNodeBoxConfig = {
   eventsList: DOMNodeBoxEvents;
 };
 
-export type Box = NormalBox;
-
 export type DOMNodeBoxEvents =
   | NormalBoxEvents
   | keyof WindowEventMap
@@ -29,7 +27,7 @@ export type DOMNodeBoxEvents =
   | "@effect";
 
 export type DOMNodeBoxEvent = {
-  readonly DOMEvent: Event | null;
+  readonly DOMEvent?: Event;
 };
 
 export type DOMNodeBoxInternalData = {
@@ -47,18 +45,18 @@ type DOMNodeBoxContent =
   | null
   | undefined
   | NormalBox
-  | (string | number | null | undefined | DOMNodeBox)[];
+  | Function
+  | (string | number | null | undefined | DOMNodeBox | Function)[];
 
 export type InsertNodePosition = "before" | "after";
+
 export interface DOMNodeBox
   extends NormalBox<DOMNodeBoxContent, DOMNodeBoxConfig> {
   __DOMNodeBoxData: DOMNodeBoxInternalData;
-  el: HTMLElement;
+  el: Element;
+  attrs: (attributes: TemplateStringsArray, ...args: any[]) => DOMNodeBox;
   type: "dom-node";
-  render(
-    element?: HTMLElement,
-    insertPosition?: InsertNodePosition
-  ): DOMNodeBox;
+  render(element?: Element, insertPosition?: InsertNodePosition): DOMNodeBox;
   render<K extends keyof HTMLElementTagNameMap>(
     selectors?: K,
     insertPosition?: InsertNodePosition

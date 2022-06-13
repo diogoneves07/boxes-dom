@@ -25,7 +25,7 @@ export function addDOMListeners(box: DOMNodeBox) {
 
       default:
         const emitDOMEvent = (e: Event) => {
-          if (listeners[type] && listeners[type].length > 0) {
+          if (listeners[type] && listeners[type].size > 0) {
             box.emit(type, null, {
               props: {
                 DOMEvent: e,

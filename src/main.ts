@@ -1,41 +1,51 @@
 import Box from "../../boxes/src/main";
 import Html from "./engine/Html";
-
-const $message = Box()("Hello ");
-
-const span = Html`span`($message).render();
-
-span.change("");
-$message.change(2022);
-
-const Component = () => {
+const HelloWorld = () => {
   // State vars first
-  const $value = Box()("Hello ");
-  const $value1 = Box()("2022 ");
+  const $postion = Box("top");
 
   // DOM elements second and after another things...
-  const span = Html`span`($value);
-  const button = Html`button`(span);
+  const button = Html`button`("");
 
-  // $InputValue.on("@changed", () => (input.el.value = $InputValue.get()));
+  const positions = ["top", "left", "bottom", "right"];
+  let count = 0;
 
-  $value.on("*data", () => {
-    span("World! ", $value1);
-
-    setTimeout(() => {
-      span.change(2023);
-    }, 500);
+  Box().on("*stop", ({ data }) => {
+    button.change(data);
   });
 
-  return button;
+  button.on("@mounted", () => {
+    button.attrs`
+    style = 
+      transition: 0.7s all;
+      border-${$postion}: 15px solid red;
+      background-color: blue;`;
+
+    setInterval(() => {
+      $postion.change(positions[count >= 3 ? (count = 0) : ++count]);
+    }, 1000);
+  });
+  return [button];
 };
 
-Component().render();
+const Wellcome = () => {
+  const $global = Box("start");
+  const box1 = Box();
+  const box2 = Box(box1, "something else");
+  box2.on("@deepChanges", (e) => {
+    console.log(e);
+    alert("m");
+  });
+  box1(2022);
+  setInterval(() => {
+    $global.emit("*stop", new Date().toLocaleString());
+  }, 100);
+  // O usuario precisar criar um elemento para usar hooks
+  // a emisão so pode ser feita apos a montagem
+  return [HelloWorld, HelloWorld];
+};
+Html.render(Wellcome());
 
-let count = 0;
-setTimeout(() => {
-  Box().emit("*data", { value: (count += 5) });
-}, 1000);
 /*
 console.time("Dioog");
 const buttons = Html<[]>`div 2000li`;
@@ -56,37 +66,3 @@ buttons.forEach((button, index) => {
 });
 buttons[0].render();
 console.timeEnd("Dioog");*/
-/*
-const Button = (i: number, s: number) =>
-  Html`button`(i).set((v: any) => (v += s), "click");
-
-Button(0, 1).render();
-Button(0, 5).render();
-
-const diogoNeves = Html.toBoxes("#diogo-neves", true) as DOMNodeBox;
-diogoNeves.on("click", () => {
-  alert("8");
-});
-diogoNeves.render();
-*/
-// divChild.on('@event1 @event3 @event4 @event5', (e)=> divParent.emit(e.type))
-/*  
-All boxes
-Box.define("lHttp", (box, args...)=>{
-
-});
-
-Ou
-
-Html.all.define("lAnime", (box, args...) => {
-eventos  automaticos: @beforeUseAxios @afterUseAxios
-});
-
-Html.delete("lAnime")
-
-Html`button`.lAnime({
-  top:"50px",
-});
-
-Html`button`.lStyle``;
-*/
