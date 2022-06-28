@@ -1,25 +1,25 @@
 import { DOMNodeBox } from "../types/dom-node-box";
+import concatArrays from "../utilities/concat-arrays";
+
+function invokeCallbacks(item: any) {
+  let values: any = item;
+  if (typeof item === "function" && !(item as any).isBox) {
+    values = item();
+  }
+  if (Array.isArray(values)) {
+    const length = values.length;
+    for (let index = 0; index < length; index++) {
+      values[index] = invokeCallbacks(values[index]);
+    }
+  }
+  return values;
+}
 export default function normalizeBoxesValues(
-  values: (DOMNodeBox | Function)[] | (DOMNodeBox | Function)[][] | Function
+  values:
+    | (DOMNodeBox | Function | string)[]
+    | (DOMNodeBox | Function | string)[][]
+    | Function
 ): DOMNodeBox | DOMNodeBox[] {
-  const wasArray = Array.isArray(values);
-
-  const fn = (currentValues: any[]) => {
-    let array: (DOMNodeBox | (() => DOMNodeBox))[] = [];
-
-    currentValues.forEach((item) => {
-      let value: any = item;
-      if (typeof item === "function" && !(item as any).isBox) {
-        value = item();
-      }
-
-      Array.isArray(value) ? array.push(...value) : array.push(value);
-    });
-    return array;
-  };
-  const boxes = fn(fn(wasArray ? values : [values]));
-
-  return !wasArray && !boxes[1]
-    ? (boxes[0] as DOMNodeBox)
-    : (boxes as DOMNodeBox[]);
+  const result = invokeCallbacks(values);
+  return Array.isArray(result) ? concatArrays(concatArrays(result)) : result;
 }

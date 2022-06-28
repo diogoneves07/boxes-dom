@@ -1,6 +1,8 @@
 import Html from "./../src/engine/Html";
 
 describe("Check dom-node-box events", () => {
+  //* setTimeouts Ensures verification of the number of calls.
+
   test("@beforeCreate", () => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
@@ -15,19 +17,25 @@ describe("Check dom-node-box events", () => {
     button.render();
     expect(callbackfn).toBeCalledTimes(1);
   });
-  test("@beforeMount", () => {
+  test("@beforeMount", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@beforeMount", callbackfn);
     button.render();
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
-  test("@mounted", () => {
+  test("@mounted", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@mounted", callbackfn);
     button.render();
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
   test("@afterMount", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
@@ -35,27 +43,36 @@ describe("Check dom-node-box events", () => {
     button.on("@afterMount", callbackfn);
     button.render();
 
-    // Ensures verification of the number of calls.
     setTimeout(() => {
       expect(callbackfn).toBeCalledTimes(1);
       done();
-    }, 100);
+    }, 50);
   });
-  test("@beforeUpdate", () => {
+  test("@beforeUpdate", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@beforeUpdate", callbackfn);
     button.render();
-    button("2022");
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      button("2022");
+    }, 50);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 200);
   });
-  test("@updated", () => {
+  test("@updated", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@updated", callbackfn);
     button.render();
-    button("2022");
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      button("2022");
+    }, 50);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 200);
   });
 
   test("@afterUpdate", (done) => {
@@ -63,29 +80,35 @@ describe("Check dom-node-box events", () => {
     const callbackfn = jest.fn();
     button.on("@afterUpdate", callbackfn);
     button.render();
-    button(2022);
-
-    // Ensures verification of the number of calls.
+    setTimeout(() => {
+      button("2022");
+    }, 50);
     setTimeout(() => {
       expect(callbackfn).toBeCalledTimes(1);
       done();
-    }, 100);
+    }, 200);
   });
-  test("@beforeUnmount", () => {
+  test("@beforeUnmount", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@beforeUnmount", callbackfn);
     button.render();
     button.unrender();
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
-  test("@unmounted", () => {
+  test("@unmounted", (done) => {
     const button = Html`button`(Html`span`("Hello World!!!"));
     const callbackfn = jest.fn();
     button.on("@unmounted", callbackfn);
     button.render();
     button.unrender();
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
 
   test("@afterUnmount", (done) => {
@@ -95,11 +118,10 @@ describe("Check dom-node-box events", () => {
     button.render();
     button.unrender();
 
-    // Ensures verification of the number of calls.
     setTimeout(() => {
       expect(callbackfn).toBeCalledTimes(1);
       done();
-    }, 100);
+    }, 50);
   });
 
   test("@effect", (done) => {
@@ -113,7 +135,6 @@ describe("Check dom-node-box events", () => {
     });
     button.render();
 
-    // Ensures verification of the number of calls.
     setTimeout(() => {
       expect(callbackfn).toBeCalledTimes(2);
       done();
@@ -125,7 +146,7 @@ describe("Check dom-node-box events", () => {
     const callbackfn = jest.fn();
     button.on("click", callbackfn);
     button.render();
-    button.el.click();
+    (button.el as HTMLButtonElement).click();
 
     expect(callbackfn).toBeCalledTimes(1);
   });

@@ -1,17 +1,11 @@
 import { DOMNodeBox } from "../types/dom-node-box";
-import callAfterRendered from "./call-after-rendered";
-import {
-  propagateEventForBoxesChildren,
-  propagateForBoxesChildren,
-} from "./propagate-event";
-import removeDOMListeners from "./remove-dom-listeners";
+import runInNextRaf from "./run-in-next-raf";
 export default function unmountRitual(box: DOMNodeBox) {
-  box.__DOMNodeBoxData.isInDOM = false;
-  propagateForBoxesChildren(box, (b) => {
-    b.__DOMNodeBoxData.isInDOM = false;
-  });
-  removeDOMListeners(box);
-  propagateEventForBoxesChildren(box, "@unmounted");
+  box.treeEmit("@unmounted");
   box.emit("@unmounted");
-  callAfterRendered(box, "@afterUnmount");
+
+  runInNextRaf(`${box.id}@afterUnmount`, () => {
+    box.treeEmit("@afterUnmount");
+    box.emit("@afterUnmount");
+  });
 }

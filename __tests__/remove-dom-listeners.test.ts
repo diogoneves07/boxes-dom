@@ -1,17 +1,20 @@
 import Html from "./../src/engine/Html";
 describe("Remove DOM listeners", () => {
-  test("Method off", () => {
+  test("Method off", (done) => {
     const button = Html`button`("Hello World!!!");
     const callbackfn = jest.fn();
     button.on("click", callbackfn);
     button.render();
     button.off("click", callbackfn);
 
-    button.el.click();
+    setTimeout(() => {
+      (button.el as HTMLButtonElement).click();
 
-    expect(callbackfn).toBeCalledTimes(0);
+      expect(callbackfn).toBeCalledTimes(0);
+      done();
+    }, 50);
   });
-  test("Method off from event object", () => {
+  test("Method off from event object", (done) => {
     const button = Html`button`("Hello World!!!");
     const callbackfn = jest.fn();
     button.on("click", (e) => {
@@ -20,21 +23,24 @@ describe("Remove DOM listeners", () => {
     });
     button.render();
     button.off("click", callbackfn);
-
-    button.el.click();
-    button.el.click();
-
-    expect(callbackfn).toBeCalledTimes(1);
+    setTimeout(() => {
+      (button.el as HTMLButtonElement).click();
+      (button.el as HTMLButtonElement).click();
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
 
-  test("After unmounted node-box", () => {
+  test("After unmounted node-box", (done) => {
     const button = Html`button`("Hello World!!!");
     const callbackfn = jest.fn();
     button.on("click", callbackfn);
     button.render();
     button.unrender();
-    button.el.click();
-
-    expect(callbackfn).toBeCalledTimes(0);
+    setTimeout(() => {
+      (button.el as HTMLButtonElement).click();
+      expect(callbackfn).toBeCalledTimes(0);
+      done();
+    }, 50);
   });
 });

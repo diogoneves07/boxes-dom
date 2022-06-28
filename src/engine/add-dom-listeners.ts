@@ -1,51 +1,38 @@
-import { EVENTS_PREFIX } from "../../../boxes/src/globals";
+import { DOMNodeBoxEventMap } from "./../types/dom-node-box";
 import { DOMNodeBox } from "../types/dom-node-box";
+import isDOMListener from "./is-dom-listener";
 
-export function addDOMListeners(box: DOMNodeBox) {
-  const element = box.el;
-  const listeners = box.listeners as Exclude<typeof box.listeners, undefined>;
-
-  if (!box.__DOMNodeBoxData.DOMListenersCallbackfns) {
-    box.__DOMNodeBoxData.DOMListenersCallbackfns = {};
+export function addDOMListeners(box: DOMNodeBox, listenerAddedType: string) {
+  if (!isDOMListener(listenerAddedType)) {
+    return;
   }
+  const element = box.el;
 
-  const DOMListenersCallbackfns = box.__DOMNodeBoxData.DOMListenersCallbackfns;
+  const emitDOMEvent = (e: Event) => {
+    box.emit(listenerAddedType, null, {
+      props: {
+        DOMEvent: e,
+      },
+    });
+  };
 
-  Object.keys(listeners).forEach((type) => {
-    if (DOMListenersCallbackfns[type]) {
-      return;
+  const listenerRemovedCallbackfn = (
+    e: DOMNodeBoxEventMap["@listenerRemoved"]
+  ) => {
+    if (e.listenerRemoved.eventName === listenerAddedType) {
+      element.removeEventListener(listenerAddedType, emitDOMEvent);
+      e.off();
+      // box.off("@__remove-all-dom-listener", removeAllDomListenerCallbackfn);
     }
-    const prefix = type.substring(0, 1);
+  };
+  /*const removeAllDomListenerCallbackfn = (e: NormalBoxEvent) => {
+    element.removeEventListener(listenerAddedType, emitDOMEvent);
+    e.off();
+    box.off("listenerRemoved", listenerRemovedCallbackfn);
+  };*/
 
-    switch (prefix) {
-      case EVENTS_PREFIX.lib:
-      case EVENTS_PREFIX.broadcast:
-      case EVENTS_PREFIX.user:
-        return;
+  box.on("@listenerRemoved", listenerRemovedCallbackfn);
+  // box.on("@__remove-all-dom-listener", removeAllDomListenerCallbackfn);
 
-      default:
-        const emitDOMEvent = (e: Event) => {
-          if (listeners[type] && listeners[type].size > 0) {
-            box.emit(type, null, {
-              props: {
-                DOMEvent: e,
-              },
-            });
-          } else {
-            noObserver();
-          }
-        };
-        const noObserver = () => {
-          DOMListenersCallbackfns[type] = null;
-          element.removeEventListener(type, emitDOMEvent);
-        };
-
-        DOMListenersCallbackfns[type] = () => {
-          element.removeEventListener(type, emitDOMEvent);
-        };
-
-        element.addEventListener(type, emitDOMEvent);
-        break;
-    }
-  });
+  element.addEventListener(listenerAddedType, emitDOMEvent);
 }

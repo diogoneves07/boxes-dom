@@ -1,7 +1,7 @@
 export default function insertNodeInDOM(
   parentEl: Element,
   node: Node,
-  insertPosition?: "before" | "after"
+  insertPosition: "before" | "after" | "inside" = "inside"
 ) {
   switch (insertPosition) {
     case "before":

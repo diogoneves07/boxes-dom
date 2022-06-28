@@ -6,9 +6,7 @@ body,
 html {
   height: 100%;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
   background-color: #0f0d0d;
 }
 input {
@@ -21,8 +19,10 @@ button {
   background-color: #3a3535;
   cursor: pointer;
   margin: 40px;
+  width: 150px;
 }
 .diogo {
+  transition: 1s all;
   color: red;
-  font-size: 50px;
+  font-size: 30px;
 }

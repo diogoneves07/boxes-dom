@@ -1,6 +1,5 @@
 import { DOMNodeBox } from "../types/dom-node-box";
-import { propagateEventForBoxesChildren } from "./propagate-event";
 export default function beforeUnmountRitual(box: DOMNodeBox) {
-  propagateEventForBoxesChildren(box, "@beforeUnmount");
+  box.treeEmit("@beforeUnmount");
   box.emit("@beforeUnmount");
 }

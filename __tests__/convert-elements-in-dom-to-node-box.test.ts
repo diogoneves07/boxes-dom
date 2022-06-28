@@ -17,39 +17,42 @@ describe("Convert elements in DOM to node-box", () => {
         Worls!!!
     </button>
     `;
-    const button = Html.toBoxes(
+    const button = Html.convertToBoxes(
       document.body.firstElementChild as HTMLElement
     ) as DOMNodeBox;
 
     button.on("click", callbackfn);
 
-    button.el.click();
+    (button.el as HTMLButtonElement).click();
 
     expect(button.el.isConnected).toBe(true);
     expect(button.el).toBe(document.body.firstElementChild);
     expect(callbackfn).toBeCalledTimes(1);
   });
 
-  test("Convert for use as a component", () => {
+  test("For use as a component", (done) => {
     const normalSpanElement = document.createElement("span");
     const normalButtonElement = document.createElement("button");
     const callbackfn = jest.fn();
     normalButtonElement.appendChild(normalSpanElement);
     document.body.appendChild(normalButtonElement);
-    const Button = () => Html.toBoxes(normalButtonElement, true) as DOMNodeBox;
+    const Button = () =>
+      Html.convertToBoxes(normalButtonElement, true) as DOMNodeBox;
     const button = Button();
     button.render();
     button.on("click", callbackfn);
 
-    button.el.click();
-
-    expect(button.el.isConnected).toBe(true);
-    expect(button.el).not.toBe(normalButtonElement);
-    expect(callbackfn).toBeCalledTimes(1);
+    (button.el as HTMLButtonElement).click();
+    setTimeout(() => {
+      expect(button.el.isConnected).toBe(true);
+      expect(button.el).not.toBe(normalButtonElement);
+      expect(callbackfn).toBeCalledTimes(1);
+      done();
+    }, 50);
   });
 
-  test("Convert when the indicated element non-existent", () => {
-    const button = Html.toBoxes("#app");
+  test("When the indicated element non-existent", () => {
+    const button = Html.convertToBoxes("#app");
     expect(button).toBe(false);
   });
 });

@@ -1,72 +1,60 @@
-import Box from "../../../boxes/src/main";
+import { DOM_NODE_BOX_WRAPPER } from "./dom-node-box-wrapper";
+import Box, { hasBoxes, NormalBox, BoxEventMap } from "../../../boxes/src/main";
 
 import { DOMNodeBox, InsertNodePosition } from "../types/dom-node-box";
+import getElement from "../utilities/get-element";
+import applyAttributes from "./apply-attributes";
 import beforeMountRitual from "./before-mount-ritual";
 import beforeUnmountRitual from "./before-unmount-ritual";
 import generateNodesForDOM from "./generate-nodes-for-dom";
 import insertNodeInDOM from "./insert-node-in-dom";
 import mountedRitual from "./mounted-ritual";
+import normalizeBoxesValues from "./normalize-boxes-values";
+import runInRaf from "./run-in-raf";
 import unmountRitual from "./unmounted-ritual";
 
 export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
-  type: "dom-node",
+  wrappers: DOM_NODE_BOX_WRAPPER,
   attrs(this: DOMNodeBox, attributes: TemplateStringsArray, ...args: any[]) {
+    const DOMNodeBoxData = this.__DOMNodeBoxData;
+
     const values: any[] = [];
 
     attributes.raw.forEach((value, index) => {
       values.push(value, args[index] || "");
     });
 
-    const prefixToSplitAttrs = " \\";
+    let attributesBox: NormalBox;
 
-    let lastAttributesAdded: string[][] | false = false;
-    let requestAnimationFrameId = -1;
-    const box = Box(values);
+    if (DOMNodeBoxData.attributes) {
+      // Removes last deep changes callback
+      DOMNodeBoxData.attributes.box.off(
+        "@changed[tree]",
+        DOMNodeBoxData.attributes.onTreeChangeCallback
+      );
+    }
 
-    box.on("@deepChanges", (e) => {
-      if (e.hasChanged("dom-node")) {
-        return;
-      }
-
-      window.cancelAnimationFrame(requestAnimationFrameId);
-
-      const data = box.useDataIntoBoxes("dom-node");
-
-      requestAnimationFrameId = window.requestAnimationFrame(() => {
-        if (lastAttributesAdded) {
-          lastAttributesAdded.forEach((attr) => {
-            this.el.removeAttribute(attr[0]);
-          });
+    const onTreeChangeCallback = (e: BoxEventMap["@changed[tree]"]) => {
+      if (!e.triggerBox.wrappers.has("dom-node")) {
+        if (DOMNodeBoxData.attributes) {
+          DOMNodeBoxData.attributes.lastAttributesAdded = applyAttributes(
+            this,
+            attributesBox
+          );
         }
+      }
+    };
 
-        let allAttributes: string = "";
-        (data as any[]).forEach((item) => {
-          if (Array.isArray(item)) {
-            allAttributes = allAttributes + item.join(" ");
-          } else {
-            allAttributes = allAttributes + item;
-          }
-        });
-        lastAttributesAdded = allAttributes
-          .trim()
-          .split(prefixToSplitAttrs)
-
-          .map((item) => {
-            return item.split("=").map((v) => v.trim());
-          });
-
-        lastAttributesAdded.forEach((attr) => {
-          if (
-            attr[0] !== "null" &&
-            attr[0] !== "undefined" &&
-            attr[1] !== "null" &&
-            attr[1] !== "undefined"
-          ) {
-            this.el.setAttribute(attr[0], attr[1] || "true");
-          }
-        });
-      });
-    });
+    attributesBox = Box(values);
+    DOMNodeBoxData.attributes = {
+      box: Box(values),
+      onTreeChangeCallback,
+      lastAttributesAdded: applyAttributes(this, attributesBox),
+    };
+    (attributesBox as any).diogo = 9;
+    if (hasBoxes(attributesBox, "dom-node")) {
+      attributesBox.on("@changed[tree]", onTreeChangeCallback);
+    }
 
     return this;
   },
@@ -76,27 +64,25 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
     insertPosition: InsertNodePosition
   ) {
     const DOMNodeBoxData = this.__DOMNodeBoxData;
-    if (DOMNodeBoxData.isInDOM) {
+    if (this.el.isConnected) {
       this.unrender();
     }
 
     if (!DOMNodeBoxData.nodesGenerated) {
+      this.normalize((values) => normalizeBoxesValues(values as any[]));
+
       generateNodesForDOM(this);
     }
-    const element = this.el;
-    const parentEl =
-      typeof elementOrSelector === "string"
-        ? document.querySelector(elementOrSelector)
-        : elementOrSelector;
 
-    if (!element || !parentEl) {
-      return this;
-    }
+    runInRaf(`render${this.id}`, () => {
+      const element = this.el;
+      const parentEl = getElement(elementOrSelector);
 
-    window.requestAnimationFrame(() => {
-      beforeMountRitual(this);
-      insertNodeInDOM(parentEl, element, insertPosition);
-      mountedRitual(this);
+      if (element && parentEl) {
+        beforeMountRitual(this);
+        insertNodeInDOM(parentEl, element, insertPosition);
+        mountedRitual(this);
+      }
     });
 
     return this;
@@ -105,7 +91,7 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
   unrender(this: DOMNodeBox) {
     const element = this.el;
     if (element) {
-      window.requestAnimationFrame(() => {
+      runInRaf(`unrender${this.id}`, () => {
         beforeUnmountRitual(this);
         element.remove();
         unmountRitual(this);

@@ -3,28 +3,16 @@ import { DOMNodeBox } from "../types/dom-node-box";
 import beforeUnmountRitual from "./before-unmount-ritual";
 import unmountRitual from "./unmounted-ritual";
 
-export function removeNodesUnsed(newBoxContent: any[], lastBoxContent: any[]) {
-  let n = newBoxContent;
-  let l = lastBoxContent;
-
-  l.forEach((value: Text | DOMNodeBox) => {
-    if (!value) {
-      return;
-    }
-    const hasChild = n.includes(value);
-
-    if (hasChild) {
-      return;
-    }
-
-    if (hasTextContent(value)) {
-      (value as Text).remove();
-    } else if ((value as DOMNodeBox).el) {
-      const nodeBox = value as DOMNodeBox;
+export function removeNodesUnsed(nodes: Set<any>) {
+  for (const node of nodes) {
+    if (hasTextContent(node)) {
+      (node as Text).remove();
+    } else if ((node as DOMNodeBox).el) {
+      const nodeBox = node as DOMNodeBox;
 
       beforeUnmountRitual(nodeBox);
       nodeBox.el.remove();
       unmountRitual(nodeBox);
     }
-  });
+  }
 }
