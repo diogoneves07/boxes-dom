@@ -1,5 +1,6 @@
-import { DOMNodeBox } from "../types/dom-node-box";
-export default function beforeMountRitual(box: DOMNodeBox) {
-  box.emit("@beforeMount");
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-box";
+export default function beforeMountRitual(
+  box: DOMNodeBox | DOMNodeBoxFragment
+) {
   box.treeEmit("@beforeMount");
 }

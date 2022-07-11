@@ -1,54 +1,31 @@
-import hasTextContent from "../utilities/has-text-content";
-import generateNodesForDOM from "./generate-nodes-for-dom";
-import { removeNodesUnsed } from "./remove-nodes-unsed";
-import { DOMNodeBox } from "../types/dom-node-box";
+import { ElementFragment } from "./../types/dom-node-box";
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-box";
+
+import organizeNodesForDOM from "./organize-nodes-for-dom";
+import { removeNodesUnsed } from "./treat-nodes-unsed";
 import beforeMountRitual from "./before-mount-ritual";
 import mountedRitual from "./mounted-ritual";
 import isDOMOrBoxValue from "./is-dom-or-box-value";
 import runInNextRaf from "./run-in-next-raf";
-import { afterUpdate } from "./observe-all-boxes";
 import movedRitual from "./moved-ritual";
+import hasOwnProperty from "../utilities/hasOwnProperty";
+import { prependNodes, insertNodesAfter } from "./manipulate-dom-methods";
+import { useTextNode } from "./use-text-node";
 
-function emitUpdatedEvents(box: DOMNodeBox) {
+function emitUpdatedEvents(box: DOMNodeBox | DOMNodeBoxFragment) {
   if (box.el.isConnected) {
     box.emit("@updated");
     runInNextRaf(`${box.id}"@afterUpdate @effect"`, () => {
-      afterUpdate(box);
       box.emit("@afterUpdate");
       box.emit("@effect");
     });
   }
 }
-let CURRENT_ELEMENT: Element;
-let CURRENT_BOX: DOMNodeBox;
-let CURRENT_CHILD_NODES: NodeListOf<ChildNode>;
-function organizeDOMNodes(value: any, index: number) {
-  const newNode = hasTextContent(value) ? value : value.el;
-  const isNotCorrectPosition = CURRENT_CHILD_NODES[index] !== newNode;
-  const nodeBox = value as DOMNodeBox;
-  const isNodeBox = nodeBox.isBox && nodeBox.wrappers.has("dom-node");
 
-  if (
-    newNode.parentNode &&
-    isNotCorrectPosition &&
-    (newNode as HTMLElement).isConnected
-  ) {
-    isNodeBox && nodeBox.emit("@beforeMove");
-    CURRENT_ELEMENT.insertBefore(newNode, CURRENT_ELEMENT.childNodes[index]);
-    isNodeBox && movedRitual(nodeBox);
-    return;
-  }
-
-  if (
-    (isNodeBox && !nodeBox.el.isConnected) ||
-    !(newNode as Node).isConnected
-  ) {
-    isNodeBox && CURRENT_BOX.el.isConnected && beforeMountRitual(nodeBox);
-    CURRENT_ELEMENT.insertBefore(newNode, CURRENT_ELEMENT.childNodes[index]);
-    isNodeBox && CURRENT_BOX.el.isConnected && mountedRitual(nodeBox);
-  }
-}
-export default function updateDOMNodeBox(box: DOMNodeBox, newContent: any) {
+export default function updateDOMNodeBox(
+  box: DOMNodeBox | DOMNodeBoxFragment,
+  newContent: any
+) {
   const DOMNodeBoxData = box.__DOMNodeBoxData;
   const element = box.el;
   const nContent = (
@@ -56,13 +33,7 @@ export default function updateDOMNodeBox(box: DOMNodeBox, newContent: any) {
   ) as any[];
 
   const previousContent = DOMNodeBoxData.contents as any[];
-  const previousContentSet = new Set(previousContent);
-
-  const previousContentLength = previousContent.length;
-  let indexLastTextNodeReused = -1;
-
-  CURRENT_ELEMENT = element;
-  CURRENT_BOX = box;
+  const nodesUnsed = new Set(previousContent);
 
   if (box.el.isConnected) {
     box.emit("@beforeUpdate");
@@ -70,58 +41,77 @@ export default function updateDOMNodeBox(box: DOMNodeBox, newContent: any) {
 
   let cleanContent: any[] = [];
   let nContentLength = nContent.length;
-  for (let index = 0; index < nContentLength; index++) {
-    let value = nContent[index];
+
+  const insertNode = (node: Node | ElementFragment, index: number) => {
+    if (index === 0) {
+      prependNodes(element, node);
+    } else {
+      const previousValue = cleanContent[index - 1];
+
+      insertNodesAfter(
+        element,
+        hasOwnProperty(previousValue, "isBox")
+          ? previousValue.el
+          : previousValue,
+        node
+      );
+    }
+  };
+  const run = (item: any, index: number) => {
+    let value = item;
 
     if (!isDOMOrBoxValue(value)) {
-      continue;
+      if (Array.isArray(value)) value.forEach(run);
+
+      return;
     }
 
-    if (typeof value === "number" || typeof value === "string") {
-      let addNewTextNode = true;
-      while (indexLastTextNodeReused < previousContentLength) {
-        indexLastTextNodeReused++;
-        if (
-          previousContent[indexLastTextNodeReused] &&
-          hasTextContent(previousContent[indexLastTextNodeReused])
-        ) {
-          previousContent[indexLastTextNodeReused].textContent = value;
-          value = previousContent[indexLastTextNodeReused];
-
-          addNewTextNode = false;
-
-          break;
-        }
+    if (typeof value === "string" || typeof value === "number") {
+      if (previousContent[index] instanceof Text) {
+        previousContent[index].textContent = value.toString();
+        value = previousContent[index];
+      } else {
+        value = useTextNode(value);
       }
-
-      if (addNewTextNode) {
-        value = document.createTextNode(value.toString());
-      }
+      insertNode(value as Text, index);
     } else if (
-      value &&
-      value.wrappers === "dom-node" &&
-      !(value.el as Element).isConnected
+      hasOwnProperty(value, "isBox") &&
+      (value as DOMNodeBox).wrappers.has("dom-node")
     ) {
-      generateNodesForDOM(value);
+      const boxChild = value as DOMNodeBox | DOMNodeBoxFragment;
+      const changedPosition = boxChild !== previousContent[index];
+      if (changedPosition) {
+        boxChild.emit("@changedPosition");
+      }
+
+      if (!boxChild.el.isConnected) {
+        organizeNodesForDOM(boxChild);
+        beforeMountRitual(boxChild);
+        insertNode(boxChild.el, index);
+        mountedRitual(boxChild);
+      } else if (
+        changedPosition &&
+        cleanContent[index - 1] !== previousContent[index - 1]
+      ) {
+        boxChild.emit("@beforeMove");
+        insertNode(boxChild.el, index);
+        movedRitual(boxChild);
+      }
     }
-    previousContentSet.delete(value);
+
+    // Removes items that are in the new item collection.
+    nodesUnsed.delete(value);
+
     cleanContent.push(value);
+  };
+
+  for (let index = 0; index < nContentLength; index++) {
+    run(nContent[index], index);
   }
 
   DOMNodeBoxData.contents = cleanContent;
 
-  removeNodesUnsed(previousContentSet);
-
-  CURRENT_CHILD_NODES = CURRENT_ELEMENT.childNodes;
-
-  const length = cleanContent.length;
-  for (let index = 0; index < length; index++) {
-    const value = cleanContent[index];
-    if (value && value.isBox && value !== previousContent[index]) {
-      (value as DOMNodeBox).emit("@changedPosition");
-    }
-    organizeDOMNodes(value, index);
-  }
+  removeNodesUnsed(nodesUnsed, box.el);
 
   emitUpdatedEvents(box);
 }

@@ -1,38 +1,22 @@
-import { NormalBox, BoxEventMap } from "../../../boxes/src/main";
+import { NormalBox, BoxEventMap, Boxes } from "../../../boxes/src/main";
 type AllDOMEvent = WindowEventMap & DocumentEventMap & ElementEventMap;
 export type LifeCycleEvents =
   | "@beforeCreate"
-  | "@beforeCreate[tree]"
   | "@created"
-  | "@created[tree]"
   | "@beforeMount"
-  | "@beforeMount[tree]"
   | "@mounted"
-  | "@mounted[tree]"
   | "@afterMount"
-  | "@afterMount[tree]"
   | "@beforeUpdate"
-  | "@beforeUpdate[tree]"
   | "@updated"
-  | "@updated[tree]"
   | "@afterUpdate"
-  | "@afterUpdate[tree]"
   | "@beforeUnmount"
-  | "@beforeUnmount[tree]"
   | "@unmounted"
-  | "@unmounted[tree]"
   | "@afterUnmount"
-  | "@afterUnmount[tree]"
   | "@effect"
-  | "@effect[tree]"
   | "@changedPosition"
-  | "@changedPosition[tree]"
   | "@beforeMove"
-  | "@beforeMove[tree]"
   | "@moved"
-  | "@moved[tree]"
-  | "@afterMove"
-  | "@afterMove[tree]";
+  | "@afterMove";
 
 export type DOMNodeBoxEvents =
   | keyof BoxEventMap
@@ -54,7 +38,7 @@ export interface DOMNodeBoxEventMap
 
 export type DOMNodeBoxInternalData = {
   /** Indicates whether nodes have been generated.*/
-  nodesGenerated: boolean;
+  nodesOrganized: boolean;
   /** The box contents */
   contents?: any[];
   /** Stores properties related to attributes being managed. */
@@ -64,11 +48,11 @@ export type DOMNodeBoxInternalData = {
     lastAttributesAdded: Map<string, string>;
   };
   isElementIntersecting?: boolean;
-  isWaitingElementIntersectingToUpdate?: boolean;
-  intersectionObserverAdded?: boolean;
+  isWaitingElementIntersectingToUpdate: boolean;
+  allNecessaryObserversAdded?: boolean;
 };
 
-type DOMNodeBoxContent =
+export type DOMNodeBoxContent =
   | string
   | number
   | DOMNodeBox
@@ -80,8 +64,8 @@ type DOMNodeBoxContent =
 
 export type InsertNodePosition = "before" | "after" | "inside";
 
-export interface DOMNodeBox
-  extends NormalBox<DOMNodeBoxContent, DOMNodeBoxEventMap> {
+export interface DOMNodeBox<El extends Element = Element>
+  extends Boxes<any, DOMNodeBoxEventMap> {
   /**
    * The data necessary for the functioning of the library.
    * @protected
@@ -89,7 +73,7 @@ export interface DOMNodeBox
   __DOMNodeBoxData: DOMNodeBoxInternalData;
 
   /** The DOM element that the box represents. */
-  el: Element;
+  el: El;
 
   /**
    * Manage box element attributes.
@@ -127,4 +111,17 @@ export interface DOMNodeBox
    *  Unrenders the element and its tree from the DOM.
    */
   unrender(): DOMNodeBox;
+
+  forceUpdate(): DOMNodeBox;
+}
+export interface ElementFragment {
+  childNodes: (Text | Node | ElementFragment)[];
+  isConnected: boolean;
+}
+
+type F = Boxes<any, DOMNodeBoxEventMap> & Omit<DOMNodeBox, "attrs" | "el">;
+export interface DOMNodeBoxFragment extends F {
+  el: ElementFragment;
+  attrs: null;
+  isBoxFragment: true;
 }

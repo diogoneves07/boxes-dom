@@ -1,32 +1,11 @@
 import { NormalBox } from "../../../boxes/src/main";
-import { DOMNodeBox } from "./../types/dom-node-box";
+import { DOMNodeBox } from "../types/dom-node-box";
 import runInRaf from "./run-in-raf";
 const PREFIX_TO_SPLIT_ATTRS = " \\";
 
-export default function applyAttributes(
-  box: DOMNodeBox,
-  attributesBox: NormalBox
-) {
-  const DOMNodeBoxData = box.__DOMNodeBoxData;
-
-  let lastAttributesAdded = DOMNodeBoxData.attributes
-    ? DOMNodeBoxData.attributes.lastAttributesAdded
-    : undefined;
-
-  const data = attributesBox.getDataInBoxes("dom-node");
-  let allAttributes: string = "";
-
-  (data as any[]).forEach((item) => {
-    if (Array.isArray(item)) {
-      allAttributes = allAttributes + item.join(" ");
-    } else {
-      allAttributes = allAttributes + item;
-    }
-  });
-
+function organizeAttributes(attributes: string) {
   const newAttributes = new Map<string, string>();
-
-  allAttributes
+  attributes
     .trim()
     .split(PREFIX_TO_SPLIT_ATTRS)
     .forEach((item) => {
@@ -37,14 +16,50 @@ export default function applyAttributes(
         newAttributes.set(v[0].trim(), "true");
       }
     });
+  return newAttributes;
+}
+function normalizeDataInBoxes(data: any) {
+  let attributes = "";
+
+  (data as any[]).forEach((item) => {
+    if (Array.isArray(item)) {
+      attributes = attributes + item.join(" ");
+    } else {
+      attributes = attributes + item;
+    }
+  });
+  return attributes;
+}
+/**
+ * Sets attributes to the box element
+ * @param box
+ * The box.
+ * @param attributesBox
+ * The box that stores and manages the attributes.
+ */
+export default function setAttributesToBoxElement(
+  box: DOMNodeBox,
+  attributesBox: NormalBox
+) {
+  const DOMNodeBoxData = box.__DOMNodeBoxData;
+
+  let lastAttributesAdded = DOMNodeBoxData.attributes
+    ? DOMNodeBoxData.attributes.lastAttributesAdded
+    : undefined;
+
+  const data = attributesBox.getDataInBoxes("dom-node");
+
+  const newAttributes = organizeAttributes(normalizeDataInBoxes(data));
 
   if (lastAttributesAdded) {
     lastAttributesAdded.forEach((_attrValue, attrName) => {
+      // Removes attributes that will not be used.
       if (!newAttributes.has(attrName)) {
         box.el.removeAttribute(attrName);
       }
     });
   }
+
   runInRaf(`${box.id}attrs`, () => {
     newAttributes.forEach((attrValue, attrName) => {
       if (

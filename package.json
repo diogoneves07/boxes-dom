@@ -5,12 +5,12 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/boxes.umd.js",
-  "module": "./dist/boxes.es.js",
+  "main": "./dist/boxes-dom.umd.js",
+  "module": "./dist/boxes-dom.es.js",
   "exports": {
     ".": {
-      "import": "./dist/boxes.es.js",
-      "require": "./dist/boxes.umd.js"
+      "import": "./dist/boxes-dom.es.js",
+      "require": "./dist/boxes-dom.umd.js"
     }
   },
   "scripts": {

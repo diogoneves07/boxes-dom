@@ -1,9 +1,9 @@
-import hasTextContent from "../utilities/has-text-content";
+import hasOwnProperty from "../utilities/hasOwnProperty";
 
 export default function isDOMOrBoxValue(value: any) {
   return typeof value === "string" ||
     typeof value === "number" ||
-    (value && (value.isBox || hasTextContent(value)))
+    (value && (hasOwnProperty(value, "isBox") || value instanceof Text))
     ? true
     : false;
 }

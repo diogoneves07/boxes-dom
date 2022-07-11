@@ -1,9 +1,11 @@
+import { DOMNodeBoxContent } from "./../types/dom-node-box";
 import { DOMNodeBox } from "../types/dom-node-box";
 import concatArrays from "../utilities/concat-arrays";
+import hasOwnProperty from "../utilities/hasOwnProperty";
 
 function invokeCallbacks(item: any) {
   let values: any = item;
-  if (typeof item === "function" && !(item as any).isBox) {
+  if (typeof item === "function" && !hasOwnProperty(item, "isBox")) {
     values = item();
   }
   if (Array.isArray(values)) {
@@ -14,12 +16,10 @@ function invokeCallbacks(item: any) {
   }
   return values;
 }
-export default function normalizeBoxesValues(
-  values:
-    | (DOMNodeBox | Function | string)[]
-    | (DOMNodeBox | Function | string)[][]
-    | Function
+export default function invokeCallbacksInBoxesValues(
+  values: DOMNodeBoxContent | DOMNodeBoxContent[]
 ): DOMNodeBox | DOMNodeBox[] {
   const result = invokeCallbacks(values);
+
   return Array.isArray(result) ? concatArrays(concatArrays(result)) : result;
 }

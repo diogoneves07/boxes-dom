@@ -1,7 +1,8 @@
+import { useTextNode } from "./use-text-node";
+
 export function transformDOMNodeBoxValue(value: any) {
   if (typeof value === "string" || typeof value === "number") {
-    const node = document.createTextNode(value.toString());
-    (node as any).isContentNumber = typeof value === "number";
+    const node = useTextNode(value);
     return node;
   }
   return value;

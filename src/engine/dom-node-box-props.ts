@@ -1,20 +1,20 @@
-import { DOM_NODE_BOX_WRAPPER } from "./dom-node-box-wrapper";
 import Box, { hasBoxes, NormalBox, BoxEventMap } from "../../../boxes/src/main";
 
 import { DOMNodeBox, InsertNodePosition } from "../types/dom-node-box";
 import getElement from "../utilities/get-element";
-import applyAttributes from "./apply-attributes";
+import setAttributesToBoxElement from "./set-attributes-to-box-element";
 import beforeMountRitual from "./before-mount-ritual";
 import beforeUnmountRitual from "./before-unmount-ritual";
-import generateNodesForDOM from "./generate-nodes-for-dom";
+import organizeNodesForDOM from "./organize-nodes-for-dom";
 import insertNodeInDOM from "./insert-node-in-dom";
 import mountedRitual from "./mounted-ritual";
-import normalizeBoxesValues from "./normalize-boxes-values";
+import invokeCallbacksInBoxesValues from "./invoke-callbacks-in-boxes-values";
 import runInRaf from "./run-in-raf";
 import unmountRitual from "./unmounted-ritual";
+import manipulateDOM from "./manipulate-dom";
+import { removeNode } from "./manipulate-dom-methods";
 
-export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
-  wrappers: DOM_NODE_BOX_WRAPPER,
+const DOMNodeBoxProps: Partial<DOMNodeBox> = {
   attrs(this: DOMNodeBox, attributes: TemplateStringsArray, ...args: any[]) {
     const DOMNodeBoxData = this.__DOMNodeBoxData;
 
@@ -27,35 +27,36 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
     let attributesBox: NormalBox;
 
     if (DOMNodeBoxData.attributes) {
-      // Removes last deep changes callback
-      DOMNodeBoxData.attributes.box.off(
-        "@changed[tree]",
+      // Removes last @changed callbackfn
+      DOMNodeBoxData.attributes.box.treeOff(
+        "@changed",
         DOMNodeBoxData.attributes.onTreeChangeCallback
       );
     }
 
-    const onTreeChangeCallback = (e: BoxEventMap["@changed[tree]"]) => {
+    const onTreeChangeCallback = (e: BoxEventMap["@changed"]) => {
       if (!e.triggerBox.wrappers.has("dom-node")) {
         if (DOMNodeBoxData.attributes) {
-          DOMNodeBoxData.attributes.lastAttributesAdded = applyAttributes(
-            this,
-            attributesBox
-          );
+          DOMNodeBoxData.attributes.lastAttributesAdded =
+            setAttributesToBoxElement(this, attributesBox);
         }
       }
     };
 
     attributesBox = Box(values);
     DOMNodeBoxData.attributes = {
-      box: Box(values),
+      box: attributesBox,
       onTreeChangeCallback,
-      lastAttributesAdded: applyAttributes(this, attributesBox),
+      lastAttributesAdded: setAttributesToBoxElement(this, attributesBox),
     };
-    (attributesBox as any).diogo = 9;
-    if (hasBoxes(attributesBox, "dom-node")) {
-      attributesBox.on("@changed[tree]", onTreeChangeCallback);
-    }
 
+    if (hasBoxes(attributesBox, "dom-node")) {
+      attributesBox.treeOn("@changed", onTreeChangeCallback);
+    }
+    return this;
+  },
+  forceUpdate(this: DOMNodeBox) {
+    manipulateDOM(this);
     return this;
   },
   render(
@@ -63,18 +64,20 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
     elementOrSelector: Element | string = document.body,
     insertPosition: InsertNodePosition
   ) {
-    const DOMNodeBoxData = this.__DOMNodeBoxData;
-    if (this.el.isConnected) {
-      this.unrender();
-    }
-
-    if (!DOMNodeBoxData.nodesGenerated) {
-      this.normalize((values) => normalizeBoxesValues(values as any[]));
-
-      generateNodesForDOM(this);
-    }
-
     runInRaf(`render${this.id}`, () => {
+      const DOMNodeBoxData = this.__DOMNodeBoxData;
+      if (this.el.isConnected) {
+        this.unrender();
+      }
+
+      if (!DOMNodeBoxData.nodesOrganized) {
+        this.normalize((values) =>
+          invokeCallbacksInBoxesValues(values as any[])
+        );
+
+        organizeNodesForDOM(this);
+      }
+
       const element = this.el;
       const parentEl = getElement(elementOrSelector);
 
@@ -89,14 +92,19 @@ export const DOMNodeBoxProps: Partial<DOMNodeBox> = {
   },
 
   unrender(this: DOMNodeBox) {
-    const element = this.el;
-    if (element) {
-      runInRaf(`unrender${this.id}`, () => {
+    runInRaf(`unrender${this.id}`, () => {
+      const element = this.el;
+      if (element) {
         beforeUnmountRitual(this);
-        element.remove();
+        removeNode(element, element.parentElement);
         unmountRitual(this);
-      });
-    }
+      }
+    });
+
     return this;
   },
 };
+
+Object.assign(DOMNodeBoxProps, Object.getPrototypeOf(Box()));
+
+export default DOMNodeBoxProps;
