@@ -1,6 +1,9 @@
-import { NormalBox } from "../../../boxes/src/main";
-import { DOMNodeBox } from "../types/dom-node-box";
+import { lGetDataInBoxes } from "../../../boxes/src/main";
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-boxes";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
+import { forElAndEachNodeClone } from "./manager-nodes-clones";
 import runInRaf from "./run-in-raf";
+
 const PREFIX_TO_SPLIT_ATTRS = " \\";
 
 function organizeAttributes(attributes: string) {
@@ -30,6 +33,33 @@ function normalizeDataInBoxes(data: any) {
   });
   return attributes;
 }
+function removeLastStyle(element: Element, lastStyle: string) {
+  lastStyle.replace(/.*?:/g, (key) => {
+    const property = key.substring(0, key.length - 1).trim() as any;
+    (element as HTMLElement).style[property] = "";
+    return "";
+  });
+}
+function removesAttributesNotUsed(
+  box: DOMNodeBox | DOMNodeBoxFragment,
+  lastAttributesAdded: Map<string, string>,
+  newAttributes: Map<string, string>
+) {
+  lastAttributesAdded.forEach((attrValue, attrName) => {
+    // Removes attributes that will not be used.
+    if (!newAttributes.has(attrName)) {
+      forElAndEachNodeClone(box.el, (el) => {
+        if (el instanceof Element) {
+          if (attrName === "style") {
+            attrValue && removeLastStyle(el, attrValue);
+          } else {
+            el.removeAttribute(attrName);
+          }
+        }
+      });
+    }
+  });
+}
 /**
  * Sets attributes to the box element
  * @param box
@@ -38,29 +68,27 @@ function normalizeDataInBoxes(data: any) {
  * The box that stores and manages the attributes.
  */
 export default function setAttributesToBoxElement(
-  box: DOMNodeBox,
-  attributesBox: NormalBox
+  box: DOMNodeBox | DOMNodeBoxFragment
 ) {
-  const DOMNodeBoxData = box.__DOMNodeBoxData;
+  const DOMNodeBoxData = getDOMNodeBoxInternalData(box);
+  if (!DOMNodeBoxData.attributes) {
+    return;
+  }
+  const attributesBox = DOMNodeBoxData.attributes.box;
 
   let lastAttributesAdded = DOMNodeBoxData.attributes
     ? DOMNodeBoxData.attributes.lastAttributesAdded
     : undefined;
 
-  const data = attributesBox.getDataInBoxes("dom-node");
+  const data = lGetDataInBoxes(attributesBox)("dom-node");
 
   const newAttributes = organizeAttributes(normalizeDataInBoxes(data));
 
   if (lastAttributesAdded) {
-    lastAttributesAdded.forEach((_attrValue, attrName) => {
-      // Removes attributes that will not be used.
-      if (!newAttributes.has(attrName)) {
-        box.el.removeAttribute(attrName);
-      }
-    });
+    removesAttributesNotUsed(box, newAttributes, lastAttributesAdded);
   }
 
-  runInRaf(`${box.id}attrs`, () => {
+  runInRaf(() => {
     newAttributes.forEach((attrValue, attrName) => {
       if (
         attrName !== "null" &&
@@ -71,11 +99,25 @@ export default function setAttributesToBoxElement(
         const attrCurrentValue =
           lastAttributesAdded && lastAttributesAdded.get(attrName);
 
-        if (attrCurrentValue !== attrValue) {
-          box.el.setAttribute(attrName, attrValue);
-        }
+        forElAndEachNodeClone(box.el, (el) => {
+          if (el instanceof Element) {
+            if (attrCurrentValue !== attrValue || !el.hasAttribute(attrName)) {
+              if (attrName === "style" && el.hasAttribute(attrName)) {
+                attrCurrentValue && removeLastStyle(el, attrCurrentValue);
+                (el as HTMLElement).style.cssText += attrValue;
+              } else {
+                el.setAttribute(attrName, attrValue);
+              }
+            }
+          }
+        });
       }
     });
-  });
+
+    if (DOMNodeBoxData.attributes) {
+      DOMNodeBoxData.attributes.lastAttributesAdded = newAttributes;
+    }
+  }, `${box.id}attrs`);
+
   return newAttributes;
 }

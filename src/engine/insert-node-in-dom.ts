@@ -1,9 +1,9 @@
-import { ElementFragment } from "./../types/dom-node-box";
+import DOMNodeBoxElementFragment from "./element-fragment";
 import { appendNodes, insertNodesBefore } from "./manipulate-dom-methods";
 
 export default function insertNodeInDOM(
   parentEl: Node,
-  node: Node | ElementFragment,
+  node: Node | DOMNodeBoxElementFragment,
   insertPosition: "before" | "after" | "inside" = "inside"
 ) {
   switch (insertPosition) {

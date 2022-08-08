@@ -1,7 +1,7 @@
-import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-box";
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-boxes";
 export default function beforeUnmountRitual(
   box: DOMNodeBox | DOMNodeBoxFragment
 ) {
-  box.nodesEmit("@beforeUnmount");
+  box.itemsEmit("@beforeUnmount");
   box.emit("@beforeUnmount");
 }

@@ -1,50 +1,131 @@
-import Box from "../../boxes/src/main";
+import { DOMNodeBoxEventMap } from "./types/dom-node-boxes";
+import { lAttrs as lAttrs, lGetChildNodes } from "./engine/native-wrappers";
+import Box, { WrapEmit, WrapOn } from "../../boxes/src/main";
+import DOMB from "./engine/domb";
 import { render, _button, _div, _fragment, _i, _strong } from "./index";
+
+const lMounted = WrapOn<DOMNodeBoxEventMap["@mounted"]>("@mounted");
 /*
 
+onGlobalMounted(()=>{
+
+});
+
+box.it(() => {});
+
+box.nodes(() => {});
+
+box.subtree(() => {});
+
+box.children(() => {});
+
+*/
+
+const lOnClick = WrapOn<
+  DOMNodeBoxEventMap["click"],
+  boolean | AddEventListenerOptions
+>("click");
+
+const lMouseover = WrapOn("mouseover");
+
+const lEmitDiogo = WrapEmit("diogo");
+
 const HelloWorld = () => {
-  // State vars first
-  const $postion = Box("top");
-  // DOM elements second and after another things...
-  const button = Html`button`("");
-  const span = Html`button`("555");
+  const $postion = Box("top").key("diogo-neves");
 
-  const positions = ["top", "left", "bottom", "right"];
-  let count = 0;
+  // !render deve clonar a caixa casa já tenha sido adcionado
 
-  Box().on("*stop", ({ data }) => {
-    button.new(data);
-  });
-  // Emitir para todos a partir da raiz
-  // excutar
-  button.on("@mounted", () => {
-    button.attrs`
+  const italic = DOMB<HTMLElement>`<i>Convertido!!!</i>`;
+
+  // const Counter = () => _button(0).set((v) => ++v, lOnClick);
+
+  // const password = Box().lock()
+  // Box().unlock()
+
+  const strong = _strong(" Dn ");
+
+  const button = _button(strong, $postion, strong);
+  lAttrs`
     style = 
+      width: 250px;
+      height: 150px;
+      white-space: nowrap;
+      overflow: hidden;
       transition: 0.7s all;
       border-${$postion}: 15px solid red;
-      background-color: blue; \ 
-    data-value`;
+      background-color: blue;
+    `;
 
+  const positions = ["top", "left", "bottom", "right"];
+
+  const fragment = _fragment(button, italic, button);
+
+  let count = 0;
+
+  lMounted((e) => {
     setInterval(() => {
-      $postion.new(positions[count >= 3 ? (count = 0) : ++count]);
+      const p = positions[count >= 3 ? (count = 0) : ++count];
+      $postion.new(p);
     }, 1000);
   });
-  return [span, () => "Diogo ", ["neves"], button];
+
+  return [fragment, fragment];
+};
+// lOnClick((e)=>e.values)
+
+const Button = () => {
+  const strong = _strong(0).it(() => {
+    lMouseover((e) => {
+      console.log(e);
+    });
+  });
+  lOnClick(() => strong.set((v) => ++v));
+
+  return _button(strong);
 };
 
-const Wellcome = () => {
-  const $global = Box("start");
+render([HelloWorld, Button]);
 
-  setInterval(() => $global.emit("*stop", new Date().toLocaleString()), 100);
-  // O usuario precisar criar um elemento para usar hooks
-  // a emisão so pode ser feita apos a montagem
-  return [HelloWorld, HelloWorld];
+// box.defineKey();
+// getBoxByKey()
+/*
+
+  const convert =HTMLB`
+  <div>DIogo Neves</div>
+  `;
+
+  const d = document.createElement("div");
+  d.innerHTML = convert;
+  console.log(d);
+
+const Buttons = () => {
+  console.time("@created");
+
+  const buttons = _button.make(10000);
+
+  const div = _div(buttons);
+
+  // CSSB``
+
+  lOnClick((e) => {
+    console.log(e);
+  });
+
+  buttons.forEach((button) => button(0));
+
+  created(() => {
+    console.timeEnd("@created");
+  });
+
+  // lMethod: metodos do usuario, tMethod metodos de libs de terceiros
+  // e tambem wrrapers como Css(box)`` ou auto definir como nos eventos: lastBox Css``
+  return div;
 };
-
+//Buttons().render();
 render(Wellcome);
 
 const buttons = Html<[]>`div 10000button`;
-console.time("@mounted");
+console.time("@created");
 
 buttons.forEach((button, index) => {
   const b = button;
@@ -65,8 +146,8 @@ setInterval(() => {
   });
 }, 0);
 
-buttons[0].on("@mounted", () => {
-  console.timeEnd("@mounted");
+buttons[0].on("@created", () => {
+  console.timeEnd("@created");
 });
 buttons[0].render();
 
@@ -91,105 +172,7 @@ const TreeOn = () => {
     $box2.set((v) => ++v);
   }, 200);
 
-  console.time("@mounted");
-  const divParent = Html`div`($box3);
-  return divParent;
+  console.time("@created");
+  const div = Html`div`($box3);
+  return div;
 };*/
-/*
-const Buttons = () => {
-  console.time("@mounted");
-
-  const buttons = _button.make(10000);
-
-  const divParent = _div(buttons);
-
-  buttons.forEach((button) => button(0));
-
-  setInterval(() => {
-    buttons.forEach((button) => {
-      button.set((values) => {
-        return ++values;
-      });
-    });
-  }, 0);
-
-   setInterval(() => {
-    divParent.set((values) => {
-      values.splice(0, 100);
-      return values;
-    });
-  }, 0);
-
-  divParent.on("@mounted", () => console.timeEnd("@mounted"));
-
-  return divParent;
-};
-
-//render(Buttons);
-//const Counter = () => _button(0).set((v) => ++v, "click");
-const Condition = () => {
-  const button = _button(1);
-  const strong = _strong(2);
-
-  const $value = Box(button);
-
-  const divParent = _div($value);
-
-  setTimeout(() => {
-    $value.new(strong);
-  }, 4000);
-  return divParent;
-};*/
-
-const HelloWorld = () => {
-  const $postion = Box("top");
-  const button = _button("Hello world!!!");
-  const positions = ["top", "left", "bottom", "right"];
-  const div = _div();
-
-  div.on("@updated", () => {
-    alert("m");
-  });
-  // Html("button", 5)("Hello world!!!") ou
-  // tipo  Html<string, HTMLButtonElement>`button`
-  // Html.div
-  let count = 0;
-
-  button.attrs`
-  style = 
-    transition: 0.7s all;
-    border-${$postion}: 15px solid red;
-    background-color: blue; \
-  data-value`;
-
-  button.on("@mounted", () => {
-    setInterval(() => {
-      const p = positions[count >= 3 ? (count = 0) : ++count];
-      $postion.new(p);
-    }, 800);
-  });
-
-  const fragment = _fragment(" A ", button, " C ");
-  const secondFragment = _fragment(" 1 ");
-
-  setTimeout(() => {
-    fragment.set((values) => {
-      values.unshift(secondFragment);
-
-      return values;
-    });
-  }, 1000);
-
-  setTimeout(() => {
-    fragment.set((values) => {
-      values.push(" QUero  ");
-
-      return values;
-    });
-  }, 3000);
-  console.log(fragment);
-
-  return _div(fragment);
-};
-
-render(HelloWorld);

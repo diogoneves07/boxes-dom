@@ -1,7 +1,10 @@
-import { DOMNodeBoxFragment } from "./../types/dom-node-box";
-import Box from "../../../../diogo07/boxes/src/main";
+import { CreateBoxType } from "../../../boxes/src/main";
 
+import { DOMNodeBoxFragment } from "../types/dom-node-boxes";
 import DOMNodeBoxProps from "./dom-node-box-props";
+import DOMNodeBoxElementFragment from "./element-fragment";
+import CreateDOMNodeBoxData from "./create-dom-node-box-data";
+import { DOM_NODE_BOX_INTERNAL_DATA } from "./dom-node-boxes-symbols";
 
 const FRAGMENT_WRAPPERS = new Set<string>([
   "normal",
@@ -9,36 +12,19 @@ const FRAGMENT_WRAPPERS = new Set<string>([
   "dom-node-fragment",
 ]);
 
-export class DOMNodeBoxElementFragment {
-  isConnected: boolean;
-  childNodes: (
-    | Text
-    | Element
-    | Node
-    | SVGElement
-    | DOMNodeBoxElementFragment
-  )[];
-  constructor() {
-    this.isConnected = false;
-    this.childNodes = [];
-    return this;
-  }
-}
-
 export default function Fragment(...args: any[]) {
-  const fragment = Box(...args) as unknown as DOMNodeBoxFragment;
+  const fragment = CreateBoxType(
+    "dom-node-fragment",
+    DOMNodeBoxProps,
+    FRAGMENT_WRAPPERS
+  ) as unknown as DOMNodeBoxFragment;
 
-  Object.setPrototypeOf(fragment, DOMNodeBoxProps);
-
-  fragment.__DOMNodeBoxData = {
-    nodesOrganized: false,
-    isWaitingElementIntersectingToUpdate: true,
-  };
+  (fragment as any)[DOM_NODE_BOX_INTERNAL_DATA] = CreateDOMNodeBoxData();
 
   fragment.el = new DOMNodeBoxElementFragment();
-  fragment.attrs = null;
   fragment.isBoxFragment = true;
-  fragment.wrappers = FRAGMENT_WRAPPERS;
+
+  fragment(...args);
 
   return fragment;
 }

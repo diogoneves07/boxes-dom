@@ -1,5 +1,5 @@
 export default function getElement(
-  elementOrSelector: Element | string | undefined | null
+  elementOrSelector: Node | string | undefined | null
 ) {
   if (!elementOrSelector) {
     return null;

@@ -1,11 +1,10 @@
-import {
-  DOMNodeBox,
-  DOMNodeBoxFragment,
-  ElementFragment,
-} from "../types/dom-node-box";
-import hasOwnProperty from "../utilities/hasOwnProperty";
+import { isBox } from "../../../boxes/src/main";
+
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-boxes";
 import beforeUnmountRitual from "./before-unmount-ritual";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
 import { removeNode } from "./manipulate-dom-methods";
+import { ReuseDOMNodeBox } from "./reuse-dom-node-box";
 import unmountRitual from "./unmounted-ritual";
 
 const reusableTextNodes: Text[] = [];
@@ -18,22 +17,35 @@ export function getReusableTextNode(value: string | number) {
   }
   return false;
 }
-export function removeNodesUnsed(
-  nodes: Set<any>,
-  parent: Node | ElementFragment
+function runToBox(
+  box: DOMNodeBox | DOMNodeBoxFragment,
+  el: (DOMNodeBox | DOMNodeBoxFragment)["el"],
+  elParent: (DOMNodeBox | DOMNodeBoxFragment)["el"]
 ) {
-  for (const node of nodes) {
-    if (node instanceof Text) {
-      reusableTextNodes.push(node);
-      // TextNode
-      removeNode(node, parent);
-    } else if (hasOwnProperty(node, "isBox")) {
-      const nodeBox = node as DOMNodeBox | DOMNodeBoxFragment;
-      beforeUnmountRitual(nodeBox);
+  beforeUnmountRitual(box);
 
-      removeNode(nodeBox.el, parent);
+  removeNode(el, elParent, true);
 
-      unmountRitual(nodeBox);
+  unmountRitual(box);
+}
+export function removeNodesUnsed(
+  nodesAndBoxes: Set<any>,
+  box: DOMNodeBox | DOMNodeBoxFragment
+) {
+  for (const item of nodesAndBoxes) {
+    if (item instanceof Text) {
+      reusableTextNodes.push(item);
+
+      removeNode(item, box.el);
+    } else if (isBox(item)) {
+      const boxChild = item as DOMNodeBox | DOMNodeBoxFragment;
+      const el = boxChild.el;
+
+      getDOMNodeBoxInternalData(boxChild).isBoxInUse = false;
+
+      runToBox(boxChild, el, box.el);
+    } else if (item instanceof ReuseDOMNodeBox) {
+      runToBox(item.box, item.el, box.el);
     }
   }
 }

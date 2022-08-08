@@ -1,0 +1,17 @@
+export type LifeCycleEventList =
+  | "@beforeCreate"
+  | "@created"
+  | "@beforeMount"
+  | "@mounted"
+  | "@afterMount"
+  | "@beforeUpdate"
+  | "@updated"
+  | "@afterUpdate"
+  | "@beforeUnmount"
+  | "@unmounted"
+  | "@afterUnmount"
+  | "@effect"
+  | "@changedPosition"
+  | "@beforeMove"
+  | "@moved"
+  | "@afterMove";

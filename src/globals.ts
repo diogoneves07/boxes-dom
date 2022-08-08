@@ -1,0 +1,18 @@
+const LIFE_CYCLE_EVENTS = [
+  "@beforeCreate",
+  "@created",
+  "@beforeMount",
+  "@mounted",
+  "@afterMount",
+  "@beforeUpdate",
+  "@updated",
+  "@afterUpdate",
+  "@beforeUnmount",
+  "@unmounted",
+  "@afterUnmount",
+  "@effect",
+  "@changedPosition",
+  "@beforeMove",
+  "@moved",
+  "@afterMove",
+];

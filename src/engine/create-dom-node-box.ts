@@ -1,8 +1,10 @@
 import { DOM_NODE_BOX_WRAPPER } from "./dom-node-box-wrapper";
-import Box from "../../../boxes/src/main";
+import { CreateBoxType } from "../../../boxes/src/main";
 
-import { DOMNodeBox } from "../types/dom-node-box";
+import { DOMNodeBox } from "../types/dom-node-boxes";
 import DOMNodeBoxProps from "./dom-node-box-props";
+import CreateDOMNodeBoxData from "./create-dom-node-box-data";
+import { DOM_NODE_BOX_INTERNAL_DATA } from "./dom-node-boxes-symbols";
 
 /**
  * Creates the boxes responsible for managing the DOM node and its tree.
@@ -33,17 +35,16 @@ function createDOMNodeBOX(
 ): DOMNodeBox | DOMNodeBox[] {
   let boxes: DOMNodeBox[] | undefined;
   let count = amount || 1;
+
   while (count--) {
-    const box = Box() as unknown as DOMNodeBox;
+    const box = CreateBoxType(
+      "dom-node",
+      DOMNodeBoxProps,
+      DOM_NODE_BOX_WRAPPER
+    ) as unknown as DOMNodeBox;
 
-    Object.setPrototypeOf(box, DOMNodeBoxProps);
-
-    box.__DOMNodeBoxData = {
-      nodesOrganized: false,
-      isWaitingElementIntersectingToUpdate: true,
-    };
+    (box as any)[DOM_NODE_BOX_INTERNAL_DATA] = CreateDOMNodeBoxData();
     box.el = document.createElement(tagName);
-    box.wrappers = DOM_NODE_BOX_WRAPPER;
 
     if (amount === 1) {
       return box;

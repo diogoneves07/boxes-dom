@@ -1,8 +1,10 @@
-import { DOMNodeBox } from "../types/dom-node-box";
-import beforeManipulateDOM from "./before-manipulate-dom";
-import runInRaf from "./run-in-raf";
-
 /** Observes the elements that enter the viewport and update their boxes (if necessary). */
+
+import { DOMNodeBox } from "../types/dom-node-boxes";
+import beforeManipulateDOM from "./before-manipulate-dom";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
+import { getNodeParentBox } from "./manager-box-nodes";
+import runInRaf from "./run-in-raf";
 
 const ENTRIES_MAP = new Map<Element, IntersectionObserverEntry>();
 
@@ -10,11 +12,11 @@ function loopEntriesMap() {
   ENTRIES_MAP.forEach((entry, target) => {
     if (!entry.isIntersecting) return;
 
-    const box = (target as any).__boxes__parentBox as DOMNodeBox;
+    const box = getNodeParentBox(target) as DOMNodeBox;
 
     if (!box) return;
 
-    const DOMNodeBoxData = box.__DOMNodeBoxData;
+    const DOMNodeBoxData = getDOMNodeBoxInternalData(box);
 
     DOMNodeBoxData.isElementIntersecting = entry.isIntersecting;
 
@@ -29,9 +31,13 @@ export const INTERSECTION_OBSERVER = new IntersectionObserver(
     for (const entry of entries) {
       ENTRIES_MAP.set(entry.target, entry);
     }
-    runInRaf("loopEntriesMap", loopEntriesMap);
+    runInRaf(loopEntriesMap, "loopEntriesMap");
   },
   {
     rootMargin: "30%",
   }
 );
+
+export function addIntersectionObserver(element: Element) {
+  INTERSECTION_OBSERVER.observe(element);
+}

@@ -1,27 +1,36 @@
 import { DOM_NODE_BOX_WRAPPER } from "./dom-node-box-wrapper";
+import { CreateBoxType } from "../../../boxes/src/main";
+
 import getElement from "../utilities/get-element";
-import { DOMNodeBox } from "../types/dom-node-box";
-import Box from "../../../boxes/src/main";
+import { DOMNodeBox } from "../types/dom-node-boxes";
 import removeBreakLinesChars from "../utilities/remove-break-liles-chars";
 import removeWhitespaces from "../utilities/remove-whitespaces";
 import DOMNodeBoxProps from "./dom-node-box-props";
 import { addAllNecessaryObservers } from "./add-all-necessary-observers";
+import { DOM_NODE_BOX_INTERNAL_DATA } from "./dom-node-boxes-symbols";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
+import { defineNode } from "./manager-box-nodes";
 
 function createDOMNodeBox() {
-  let currentElementBox = Box() as unknown as DOMNodeBox;
-  Object.setPrototypeOf(currentElementBox, DOMNodeBoxProps);
-  currentElementBox.wrappers = DOM_NODE_BOX_WRAPPER;
-  currentElementBox.__DOMNodeBoxData = {
+  const box = CreateBoxType(
+    "dom-node",
+    DOMNodeBoxProps,
+    DOM_NODE_BOX_WRAPPER
+  ) as unknown as DOMNodeBox;
+
+  (box as any)[DOM_NODE_BOX_INTERNAL_DATA] = {
     nodesOrganized: true,
-    isWaitingElementIntersectingToUpdate: true,
+    isWaitingElementIntersectingToUpdate: false,
   };
-  return currentElementBox;
+  return box;
 }
 function convertElementsToBox(parentElement: HTMLElement) {
   let count = 0;
   let parentElementBox = createDOMNodeBox();
 
   parentElementBox.el = parentElement as HTMLElement;
+
+  defineNode(parentElement);
 
   let currentElement = parentElement.childNodes.item(count);
   const DOMNodeContents: any = [];
@@ -34,13 +43,14 @@ function convertElementsToBox(parentElement: HTMLElement) {
         DOMNodeContents.push(value);
         break;
       case 3:
-        removeWhitespaces;
         if (
           currentElement.textContent &&
           removeWhitespaces(
             removeBreakLinesChars(currentElement.textContent)
           ).trim()
         ) {
+          defineNode(currentElement);
+
           parentElementBox(currentElement.textContent);
           DOMNodeContents.push(currentElement);
         }
@@ -50,7 +60,7 @@ function convertElementsToBox(parentElement: HTMLElement) {
     count++;
     currentElement = parentElement.childNodes.item(count);
   }
-  parentElementBox.__DOMNodeBoxData.contents = DOMNodeContents;
+  getDOMNodeBoxInternalData(parentElementBox).contents = DOMNodeContents;
 
   addAllNecessaryObservers(parentElementBox);
   return parentElementBox;
@@ -64,7 +74,7 @@ function convertElementsToBox(parentElement: HTMLElement) {
  * If `true` should use a clone of the element using the `elementOrSelector.cloneNode(true)` method.
  */
 export default function toDOMNodeBox(
-  elementOrSelector: HTMLElement | string,
+  elementOrSelector: Node | string,
   cloneNode: boolean = false
 ) {
   const parentElement = getElement(elementOrSelector);

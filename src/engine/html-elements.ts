@@ -1,17 +1,14 @@
-import { DOMNodeBoxFragment } from "./../types/dom-node-box";
+import { DOMNodeBoxFragment } from "../types/dom-node-boxes";
 import Fragment from "./fragment";
 import createDOMNodeBOX from "./create-dom-node-box";
 
 function MakeAmount(fn: Function, amount: number) {
-  console.time("@createDOMNodeBOX");
-
   const values = [];
   let count = amount;
 
   while (count--) {
     values.unshift(fn());
   }
-  console.timeEnd("@createDOMNodeBOX");
 
   return values;
 }

@@ -1,8 +1,8 @@
-import { DOMNodeBoxElementFragment } from "./fragment";
-import { ElementFragment } from "../types/dom-node-box";
+import DOMNodeBoxElementFragment from "./element-fragment";
+import { defineNode, deleteNode } from "./manager-box-nodes";
 
 function getParentElement(
-  node: Node | ElementFragment | undefined
+  node: Node | DOMNodeBoxElementFragment | undefined
 ): Node | false | null {
   if (node instanceof Node) {
     return node.parentElement;
@@ -19,41 +19,45 @@ function getParentElement(
 }
 
 export function prependNodes(
-  parent: Node | ElementFragment,
-  nodes: Node | ElementFragment
+  parent: Node | DOMNodeBoxElementFragment,
+  nodes: Node | DOMNodeBoxElementFragment
 ) {
   insertNodesBefore(parent, parent.childNodes[0], nodes);
 }
 export function appendNodes(
-  parent: Node | ElementFragment,
-  nodes: Node | ElementFragment
+  parent: Node | DOMNodeBoxElementFragment,
+  nodes: Node | DOMNodeBoxElementFragment
 ) {
   if (parent instanceof Node) {
     if (nodes instanceof Node) {
+      defineNode(nodes);
       parent.appendChild(nodes);
-    } else {
-      for (const node of nodes.childNodes) {
-        appendNodes(parent, node);
-        if (!nodes.isConnected) {
-          nodes.isConnected = true;
-        }
-      }
-    }
-  } else {
-    const lastNode = parent.childNodes[parent.childNodes.length - 1];
-    if (Array.isArray(nodes)) {
-      parent.childNodes.push(...nodes);
-    } else {
-      parent.childNodes.push(nodes);
+      return;
     }
 
-    const parentElement = getParentElement(lastNode);
-    if (parentElement) {
-      appendNodes(parentElement, nodes);
+    for (const node of nodes.childNodes) {
+      appendNodes(parent, node);
+      if (!nodes.isConnected) {
+        nodes.isConnected = true;
+      }
     }
+    return;
+  }
+  const lastNode = parent.childNodes[parent.childNodes.length - 1];
+  if (Array.isArray(nodes)) {
+    parent.childNodes.push(...nodes);
+  } else {
+    parent.childNodes.push(nodes);
+  }
+
+  const parentElement = getParentElement(lastNode);
+  if (parentElement) {
+    appendNodes(parentElement, nodes);
   }
 }
-function getNextSibling(elementFragment: ElementFragment): Node | null {
+function getNextSibling(
+  elementFragment: DOMNodeBoxElementFragment
+): Node | null {
   const childNodes = elementFragment.childNodes;
   const lastValue = childNodes[childNodes.length - 1];
   if (lastValue instanceof Node) {
@@ -64,9 +68,9 @@ function getNextSibling(elementFragment: ElementFragment): Node | null {
   return null;
 }
 export function insertNodesAfter(
-  parent: Node | ElementFragment,
-  child: Node | ElementFragment | null,
-  newNodes: Node | ElementFragment
+  parent: Node | DOMNodeBoxElementFragment,
+  child: Node | DOMNodeBoxElementFragment | null,
+  newNodes: Node | DOMNodeBoxElementFragment
 ) {
   let nextSibling: Node | null = null;
   if (child instanceof Node) {
@@ -79,52 +83,58 @@ export function insertNodesAfter(
   insertNodesBefore(parent, nextSibling, newNodes);
 }
 export function insertNodesBefore(
-  parent: Node | ElementFragment,
-  child: Node | ElementFragment | null,
-  newNodes: Node | ElementFragment
+  parent: Node | DOMNodeBoxElementFragment,
+  child: Node | DOMNodeBoxElementFragment | null,
+  newNodes: Node | DOMNodeBoxElementFragment
 ) {
   if (parent instanceof Node) {
     if (newNodes instanceof Node) {
       if (child instanceof Node || !child) {
+        defineNode(newNodes);
         parent.insertBefore(newNodes, child);
-      } else {
-        insertNodesBefore(parent, child.childNodes[0], newNodes);
+        return;
       }
-    } else {
-      for (const newNode of newNodes.childNodes) {
-        insertNodesBefore(parent, child, newNode);
-        if (!newNodes.isConnected) {
-          newNodes.isConnected = true;
-        }
+      insertNodesBefore(parent, child.childNodes[0], newNodes);
+      return;
+    }
+
+    for (const newNode of newNodes.childNodes) {
+      insertNodesBefore(parent, child, newNode);
+      if (!newNodes.isConnected) {
+        newNodes.isConnected = true;
       }
     }
+
+    return;
+  }
+
+  const changeNodePositionIndex = parent.childNodes.indexOf(newNodes);
+
+  if (changeNodePositionIndex > -1) {
+    parent.childNodes.splice(changeNodePositionIndex, 1);
+  }
+
+  const index = parent.childNodes.indexOf(child as any);
+  let sibling: Node | DOMNodeBoxElementFragment;
+
+  if (index > -1) {
+    sibling = parent.childNodes[index];
+
+    parent.childNodes.splice(Math.max(0, index), 0, newNodes);
   } else {
-    const changeNodePositionIndex = parent.childNodes.indexOf(newNodes);
-    if (changeNodePositionIndex > -1) {
-      parent.childNodes.splice(changeNodePositionIndex, 1);
-    }
-    const index = parent.childNodes.indexOf(child as any);
-    let sibling: Node | ElementFragment;
+    sibling = parent.childNodes[parent.childNodes.length - 1];
 
-    if (index > -1) {
-      sibling = parent.childNodes[index];
+    parent.childNodes.push(newNodes);
+  }
 
-      parent.childNodes.splice(Math.max(0, index), 0, newNodes);
-    } else {
-      sibling = parent.childNodes[parent.childNodes.length - 1];
+  const parentElement = getParentElement(sibling);
 
-      parent.childNodes.push(newNodes);
-    }
-
-    const parentElement = getParentElement(sibling);
-
-    if (parentElement) {
-      insertNodesBefore(parentElement, child, newNodes);
-    }
+  if (parentElement) {
+    insertNodesBefore(parentElement, child, newNodes);
   }
 }
 
-function organizeChildNodes(node: Node, parent: ElementFragment) {
+function organizeChildNodes(node: Node, parent: DOMNodeBoxElementFragment) {
   const length = parent.childNodes.length;
   for (let index = 0; index < length; index++) {
     const n = parent.childNodes[index];
@@ -136,27 +146,33 @@ function organizeChildNodes(node: Node, parent: ElementFragment) {
   }
 }
 export function removeNode(
-  node: Node | Element | Text | ElementFragment,
-  parent: Node | ElementFragment | null
+  node: Node | Element | Text | DOMNodeBoxElementFragment,
+  parent: Node | DOMNodeBoxElementFragment | null,
+  cleanNode?: boolean
 ) {
   if (node instanceof Node) {
     if (parent && !(parent instanceof Node)) {
       organizeChildNodes(node, parent);
     }
     if ((node as any).remove) {
+      if (cleanNode) node.textContent = "";
+      deleteNode(node);
       (node as any).remove();
     } else if (node.parentElement) {
+      if (cleanNode) node.textContent = "";
+      deleteNode(node);
       node.parentElement.removeChild(node);
     }
-  } else {
-    const length = node.childNodes.length;
-    for (let index = 0; index < length; index++) {
-      const n = node.childNodes[index];
-      removeNode(n, parent);
-      node.childNodes.splice(index, 1);
-      if (node.isConnected) {
-        node.isConnected = false;
-      }
+    return;
+  }
+
+  const length = node.childNodes.length;
+  for (let index = 0; index < length; index++) {
+    const n = node.childNodes[index];
+    removeNode(n, parent);
+    node.childNodes.splice(index, 1);
+    if (node.isConnected) {
+      node.isConnected = false;
     }
   }
 }

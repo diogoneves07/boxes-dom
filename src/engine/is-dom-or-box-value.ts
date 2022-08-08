@@ -1,9 +1,9 @@
-import hasOwnProperty from "../utilities/hasOwnProperty";
+import { isBox } from "../../../boxes/src/main";
 
 export default function isDOMOrBoxValue(value: any) {
   return typeof value === "string" ||
     typeof value === "number" ||
-    (value && (hasOwnProperty(value, "isBox") || value instanceof Text))
+    (value && (isBox(value) || value instanceof Text))
     ? true
     : false;
 }

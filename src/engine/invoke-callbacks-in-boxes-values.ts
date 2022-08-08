@@ -1,11 +1,12 @@
-import { DOMNodeBoxContent } from "./../types/dom-node-box";
-import { DOMNodeBox } from "../types/dom-node-box";
+import { isBox } from "../../../boxes/src/main";
+
+import { DOMNodeBoxContent } from "../types/dom-node-boxes";
+import { DOMNodeBox } from "../types/dom-node-boxes";
 import concatArrays from "../utilities/concat-arrays";
-import hasOwnProperty from "../utilities/hasOwnProperty";
 
 function invokeCallbacks(item: any) {
   let values: any = item;
-  if (typeof item === "function" && !hasOwnProperty(item, "isBox")) {
+  if (typeof item === "function" && !isBox(item)) {
     values = item();
   }
   if (Array.isArray(values)) {

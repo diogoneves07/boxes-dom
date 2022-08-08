@@ -1,7 +1,8 @@
 import { LAZY_BOXES_TO_UPDATE } from "./lazy-update-boxes";
-import { DOMNodeBox, DOMNodeBoxFragment } from "./../types/dom-node-box";
+import { DOMNodeBox, DOMNodeBoxFragment } from "../types/dom-node-boxes";
 import manipulateDOM from "./manipulate-dom";
 import hasOwnProperty from "../utilities/hasOwnProperty";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
 
 /** Forwards the box to be updated according to the isElementIntersecting property. */
 export default function beforeManipulateDOM(
@@ -12,7 +13,7 @@ export default function beforeManipulateDOM(
     return;
   }
   const box = b as DOMNodeBox;
-  const DOMNodeBoxData = box.__DOMNodeBoxData;
+  const DOMNodeBoxData = getDOMNodeBoxInternalData(box);
 
   let isElementIntersecting = DOMNodeBoxData.isElementIntersecting;
 

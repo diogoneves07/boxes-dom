@@ -1,5 +1,6 @@
-import { DOMNodeBox } from "./../types/dom-node-box";
-import invokeCallbacksInBoxesValues from "./invoke-callbacks-in-boxes-values";
+import { lGetDataInBoxes } from "../../../boxes/src/main";
+import { DOMNodeBox } from "../types/dom-node-boxes";
+import getDOMNodeBoxInternalData from "./get-dom-node-box-internal-data";
 import runInRaf from "./run-in-raf";
 import updateDOMNodeBox from "./update-dom-node-box";
 
@@ -21,12 +22,11 @@ function lazyUpdateBox(lastTime: number) {
 
   LAZY_BOXES_TO_UPDATE.delete(box);
 
-  const DOMNodeBoxData = box.__DOMNodeBoxData;
+  const DOMNodeBoxData = getDOMNodeBoxInternalData(box);
 
   if (DOMNodeBoxData.contents) {
     DOMNodeBoxData.isWaitingElementIntersectingToUpdate = false;
-    box.normalize((values) => invokeCallbacksInBoxesValues(values as any[]));
-    updateDOMNodeBox(box, box.getDataInBoxes("dom-node"));
+    updateDOMNodeBox(box, lGetDataInBoxes(box)("dom-node"));
   }
   if (Date.now() - lastTime < TIME_LIMIT) {
     lazyUpdateBox(lastTime);
@@ -35,9 +35,9 @@ function lazyUpdateBox(lastTime: number) {
 
 setInterval(() => {
   if (LAZY_BOXES_TO_UPDATE.size > 0) {
-    runInRaf("lazyUpdateBox", () => {
+    runInRaf(() => {
       const lastTime = Date.now();
       lazyUpdateBox(lastTime);
-    });
+    }, "lazyUpdateBox");
   }
 }, 200 /* 200: Fast enough to not disturb the user and slow enough to prioritize more important tasks. */);
